@@ -1,6 +1,6 @@
-use approval_receiver::ApprovalReceiverContract;
+/* use approval_receiver::ApprovalReceiverContract;
 use near_contract_standards::non_fungible_token::metadata::TokenMetadata;
-use non_fungible_token::ContractContract as NftContract;
+use nft::ContractContract as NftContract;
 use token_receiver::TokenReceiverContract;
 
 use near_contract_standards::non_fungible_token::TokenId;
@@ -127,3 +127,4 @@ pub fn helper_mint(
         deposit = 7000000000000000000000
     );
 }
+ */

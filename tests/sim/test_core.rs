@@ -1,4 +1,4 @@
-use crate::utils::{init, TOKEN_ID};
+/* use crate::utils::{init, TOKEN_ID};
 use near_contract_standards::non_fungible_token::Token;
 use near_sdk_sim::{call, view};
 
@@ -124,3 +124,4 @@ fn simulate_transfer_call_receiver_panics() {
     let token: Token = view!(nft.nft_token(TOKEN_ID.into())).unwrap_json();
     assert_eq!(token.owner_id, root.account_id());
 }
+ */

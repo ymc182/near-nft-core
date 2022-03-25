@@ -1,8 +1,8 @@
-use crate::utils::{helper_mint, init};
+/* use crate::utils::{helper_mint, init};
 use near_contract_standards::non_fungible_token::Token;
 use near_sdk::json_types::U128;
 use near_sdk_sim::{view, ContractAccount, UserAccount};
-use non_fungible_token::ContractContract as NftContract;
+use nft::ContractContract as NftContract;
 
 fn mint_more(root: &UserAccount, nft: &ContractAccount<NftContract>) {
     helper_mint(
@@ -120,3 +120,4 @@ fn simulate_enum_nft_tokens_for_owner() {
     assert_eq!(owner_tokens.get(1).unwrap().token_id, "1".to_string());
     assert_eq!(owner_tokens.get(2).unwrap().token_id, "2".to_string());
 }
+ */

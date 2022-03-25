@@ -1,34 +1,22 @@
-/*!
-Non-Fungible Token implementation with JSON serialization.
-NOTES:
-  - The maximum balance value is limited by U128 (2**128 - 1).
-  - JSON calls should pass U128 as a base-10 string. E.g. "100".
-  - The contract optimizes the inner trie structure by hashing account IDs. It will prevent some
-    abuse of deep tries. Shouldn't be an issue, once NEAR clients implement full hashing of keys.
-  - The contract tracks the change in storage before and after the call. If the storage increases,
-    the contract requires the caller of the contract to attach enough deposit to the function call
-    to cover the storage cost.
-    This is done to prevent a denial of service attack on the contract by taking all available storage.
-    If the storage decreases, the contract will issue a refund for the cost of the released storage.
-    The unused tokens from the attached deposit are also refunded, so it's safe to
-    attach more deposit than required.
-  - To prevent the deployed contract from being modified or deleted, it should not have any access
-    keys on its account.
-*/
 use near_contract_standards::non_fungible_token::metadata::{
     NFTContractMetadata, NonFungibleTokenMetadataProvider, TokenMetadata, NFT_METADATA_SPEC,
 };
-use near_contract_standards::non_fungible_token::{Token, TokenId};
 use near_contract_standards::non_fungible_token::NonFungibleToken;
+use near_contract_standards::non_fungible_token::{Token, TokenId};
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::collections::LazyOption;
-use near_sdk::json_types::ValidAccountId;
+
 use near_sdk::{
     env, near_bindgen, AccountId, BorshStorageKey, PanicOnDefault, Promise, PromiseOrValue,
 };
 
 near_sdk::setup_alloc!();
+mod mint;
+use mint::*;
 
+const NFT_NAME: &str = "NFT NAME";
+const NFT_SYMBOL: &str = "NFT";
+const NFT_BASE_URI: &str = "ipfs://nftFolder/";
 #[near_bindgen]
 #[derive(BorshDeserialize, BorshSerialize, PanicOnDefault)]
 pub struct Contract {
@@ -52,13 +40,13 @@ impl Contract {
     /// Initializes the contract owned by `owner_id` with
     /// default metadata (for example purposes only).
     #[init]
-    pub fn new_default_meta(owner_id: ValidAccountId) -> Self {
+    pub fn new_default_meta(owner_id: AccountId) -> Self {
         Self::new(
             owner_id,
             NFTContractMetadata {
                 spec: NFT_METADATA_SPEC.to_string(),
-                name: "Example NEAR non-fungible token".to_string(),
-                symbol: "EXAMPLE".to_string(),
+                name: NFT_NAME.to_string(),
+                symbol: NFT_SYMBOL.to_string(),
                 icon: Some(DATA_IMAGE_SVG_NEAR_ICON.to_string()),
                 base_uri: None,
                 reference: None,
@@ -68,7 +56,7 @@ impl Contract {
     }
 
     #[init]
-    pub fn new(owner_id: ValidAccountId, metadata: NFTContractMetadata) -> Self {
+    pub fn new(owner_id: AccountId, metadata: NFTContractMetadata) -> Self {
         assert!(!env::state_exists(), "Already initialized");
         metadata.assert_valid();
         Self {
@@ -81,24 +69,6 @@ impl Contract {
             ),
             metadata: LazyOption::new(StorageKey::Metadata, Some(&metadata)),
         }
-    }
-
-    /// Mint a new token with ID=`token_id` belonging to `receiver_id`.
-    ///
-    /// Since this example implements metadata, it also requires per-token metadata to be provided
-    /// in this call. `self.tokens.mint` will also require it to be Some, since
-    /// `StorageKey::TokenMetadata` was provided at initialization.
-    ///
-    /// `self.tokens.mint` will enforce `predecessor_account_id` to equal the `owner_id` given in
-    /// initialization call to `new`.
-    #[payable]
-    pub fn nft_mint(
-        &mut self,
-        token_id: TokenId,
-        receiver_id: ValidAccountId,
-        token_metadata: TokenMetadata,
-    ) -> Token {
-        self.tokens.mint(token_id, receiver_id, Some(token_metadata))
     }
 }
 
@@ -117,12 +87,13 @@ impl NonFungibleTokenMetadataProvider for Contract {
 mod tests {
     use near_sdk::test_utils::{accounts, VMContextBuilder};
     use near_sdk::testing_env;
+    use near_sdk::MockedBlockchain;
 
     use super::*;
 
     const MINT_STORAGE_COST: u128 = 5870000000000000000000;
 
-    fn get_context(predecessor_account_id: ValidAccountId) -> VMContextBuilder {
+    fn get_context(predecessor_account_id: AccountId) -> VMContextBuilder {
         let mut builder = VMContextBuilder::new();
         builder
             .current_account_id(accounts(0))
@@ -180,7 +151,7 @@ mod tests {
         let token_id = "0".to_string();
         let token = contract.nft_mint(token_id.clone(), accounts(0), sample_token_metadata());
         assert_eq!(token.token_id, token_id);
-        assert_eq!(token.owner_id, accounts(0).to_string());
+        assert_eq!(token.owner_id, accounts(0));
         assert_eq!(token.metadata.unwrap(), sample_token_metadata());
         assert_eq!(token.approved_account_ids.unwrap(), HashMap::new());
     }

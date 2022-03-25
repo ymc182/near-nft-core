@@ -1,4 +1,4 @@
-use crate::utils::{init, TOKEN_ID};
+/* use crate::utils::{init, TOKEN_ID};
 use near_contract_standards::non_fungible_token::Token;
 use near_sdk_sim::{call, view};
 use std::collections::HashMap;
@@ -39,8 +39,12 @@ fn simulate_simple_approve() {
     assert_eq!(token.approved_account_ids.unwrap(), expected_approvals);
 
     // root approves alice again, which changes the approval_id and doesn't require as much deposit
-    call!(root, nft.nft_approve(TOKEN_ID.into(), alice.valid_account_id(), None), deposit = 1)
-        .assert_success();
+    call!(
+        root,
+        nft.nft_approve(TOKEN_ID.into(), alice.valid_account_id(), None),
+        deposit = 1
+    )
+    .assert_success();
 
     let alice_approval_id_is_2: bool =
         view!(nft.nft_is_approved(TOKEN_ID.into(), alice.valid_account_id(), Some(2)))
@@ -86,7 +90,11 @@ fn simulate_approval_with_call() {
     let msg = "hahaha".to_string();
     let outcome = call!(
         root,
-        nft.nft_approve(TOKEN_ID.into(), approval_receiver.valid_account_id(), Some(msg.clone())),
+        nft.nft_approve(
+            TOKEN_ID.into(),
+            approval_receiver.valid_account_id(),
+            Some(msg.clone())
+        ),
         deposit = 1
     );
     assert!(outcome.is_ok());
@@ -145,8 +153,12 @@ fn simulate_revoke() {
     .assert_success();
 
     // root revokes alice
-    call!(root, nft.nft_revoke(TOKEN_ID.into(), alice.valid_account_id()), deposit = 1)
-        .assert_success();
+    call!(
+        root,
+        nft.nft_revoke(TOKEN_ID.into(), alice.valid_account_id()),
+        deposit = 1
+    )
+    .assert_success();
 
     // alice is revoked...
     let alice_approved: bool =
@@ -160,8 +172,12 @@ fn simulate_revoke() {
     assert!(token_receiver_approved);
 
     // root revokes token_receiver
-    call!(root, nft.nft_revoke(TOKEN_ID.into(), token_receiver.valid_account_id()), deposit = 1)
-        .assert_success();
+    call!(
+        root,
+        nft.nft_revoke(TOKEN_ID.into(), token_receiver.valid_account_id()),
+        deposit = 1
+    )
+    .assert_success();
 
     // alice is still revoked...
     let alice_approved: bool =
@@ -209,3 +225,4 @@ fn simulate_revoke_all() {
             .unwrap_json();
     assert!(!token_receiver_approved);
 }
+ */

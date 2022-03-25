@@ -4,7 +4,7 @@ A stub contract that implements nft_on_approve for simulation testing nft_approv
 use near_contract_standards::non_fungible_token::approval::NonFungibleTokenApprovalReceiver;
 use near_contract_standards::non_fungible_token::TokenId;
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
-use near_sdk::json_types::ValidAccountId;
+
 use near_sdk::{
     env, ext_contract, log, near_bindgen, setup_alloc, AccountId, Balance, Gas, PanicOnDefault,
     PromiseOrValue,
@@ -38,8 +38,10 @@ trait ValueReturnTrait {
 #[near_bindgen]
 impl ApprovalReceiver {
     #[init]
-    pub fn new(non_fungible_token_account_id: ValidAccountId) -> Self {
-        Self { non_fungible_token_account_id: non_fungible_token_account_id.into() }
+    pub fn new(non_fungible_token_account_id: AccountId) -> Self {
+        Self {
+            non_fungible_token_account_id: non_fungible_token_account_id.into(),
+        }
     }
 }
 
@@ -76,8 +78,13 @@ impl NonFungibleTokenApprovalReceiver for ApprovalReceiver {
             _ => {
                 let prepaid_gas = env::prepaid_gas();
                 let account_id = env::current_account_id();
-                ext_self::ok_go(msg, &account_id, NO_DEPOSIT, prepaid_gas - GAS_FOR_NFT_ON_APPROVE)
-                    .into()
+                ext_self::ok_go(
+                    msg,
+                    &account_id,
+                    NO_DEPOSIT,
+                    prepaid_gas - GAS_FOR_NFT_ON_APPROVE,
+                )
+                .into()
             }
         }
     }
