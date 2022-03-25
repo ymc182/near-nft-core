@@ -16,11 +16,13 @@ impl Contract {
         receiver_id: AccountId,
         token_metadata: TokenMetadata,
     ) -> Token {
+        let supply: U128 = self.tokens.nft_total_supply();
+        let token_id = (supply.0 + 1).to_string();
         self.tokens.internal_mint_with_refund(
             token_id,
             receiver_id,
             Some(token_metadata),
-            Some(self.tokens.owner_id),
+            Some(self.tokens.owner_id.clone()),
         )
     }
 }

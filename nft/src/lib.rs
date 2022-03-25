@@ -4,7 +4,8 @@ use near_contract_standards::non_fungible_token::metadata::{
 use near_contract_standards::non_fungible_token::NonFungibleToken;
 use near_contract_standards::non_fungible_token::{Token, TokenId};
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
-use near_sdk::collections::LazyOption;
+use near_sdk::collections::{LazyOption, LookupMap};
+use near_sdk::json_types::U128;
 
 use near_sdk::{
     env, near_bindgen, AccountId, BorshStorageKey, PanicOnDefault, Promise, PromiseOrValue,
@@ -12,20 +13,25 @@ use near_sdk::{
 
 near_sdk::setup_alloc!();
 mod mint;
+mod royalty;
 use mint::*;
-
-const NFT_NAME: &str = "NFT NAME";
-const NFT_SYMBOL: &str = "NFT";
+use royalty::*;
+const NFT_NAME: &str = "Nephilim";
+const NFT_SYMBOL: &str = "Nep";
 const NFT_BASE_URI: &str = "ipfs://nftFolder/";
+const MAX_SUPPLY: u128 = 1000;
+const DATA_IMAGE_SVG_NEAR_ICON: &str = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 288 288'%3E%3Cg id='l' data-name='l'%3E%3Cpath d='M187.58,79.81l-30.1,44.69a3.2,3.2,0,0,0,4.75,4.2L191.86,103a1.2,1.2,0,0,1,2,.91v80.46a1.2,1.2,0,0,1-2.12.77L102.18,77.93A15.35,15.35,0,0,0,90.47,72.5H87.34A15.34,15.34,0,0,0,72,87.84V201.16A15.34,15.34,0,0,0,87.34,216.5h0a15.35,15.35,0,0,0,13.08-7.31l30.1-44.69a3.2,3.2,0,0,0-4.75-4.2L96.14,186a1.2,1.2,0,0,1-2-.91V104.61a1.2,1.2,0,0,1,2.12-.77l89.55,107.23a15.35,15.35,0,0,0,11.71,5.43h3.13A15.34,15.34,0,0,0,216,201.16V87.84A15.34,15.34,0,0,0,200.66,72.5h0A15.35,15.35,0,0,0,187.58,79.81Z'/%3E%3C/g%3E%3C/svg%3E";
+
 #[near_bindgen]
 #[derive(BorshDeserialize, BorshSerialize, PanicOnDefault)]
 pub struct Contract {
     tokens: NonFungibleToken,
     metadata: LazyOption<NFTContractMetadata>,
+    //custom
+    max_supply: u128,
+    whitelist: LookupMap<AccountId, u32>,
+    //reserved
 }
-
-const DATA_IMAGE_SVG_NEAR_ICON: &str = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 288 288'%3E%3Cg id='l' data-name='l'%3E%3Cpath d='M187.58,79.81l-30.1,44.69a3.2,3.2,0,0,0,4.75,4.2L191.86,103a1.2,1.2,0,0,1,2,.91v80.46a1.2,1.2,0,0,1-2.12.77L102.18,77.93A15.35,15.35,0,0,0,90.47,72.5H87.34A15.34,15.34,0,0,0,72,87.84V201.16A15.34,15.34,0,0,0,87.34,216.5h0a15.35,15.35,0,0,0,13.08-7.31l30.1-44.69a3.2,3.2,0,0,0-4.75-4.2L96.14,186a1.2,1.2,0,0,1-2-.91V104.61a1.2,1.2,0,0,1,2.12-.77l89.55,107.23a15.35,15.35,0,0,0,11.71,5.43h3.13A15.34,15.34,0,0,0,216,201.16V87.84A15.34,15.34,0,0,0,200.66,72.5h0A15.35,15.35,0,0,0,187.58,79.81Z'/%3E%3C/g%3E%3C/svg%3E";
-
 #[derive(BorshSerialize, BorshStorageKey)]
 enum StorageKey {
     NonFungibleToken,
@@ -33,6 +39,8 @@ enum StorageKey {
     TokenMetadata,
     Enumeration,
     Approval,
+    //Custom
+    Whitelist,
 }
 
 #[near_bindgen]
@@ -68,7 +76,33 @@ impl Contract {
                 Some(StorageKey::Approval),
             ),
             metadata: LazyOption::new(StorageKey::Metadata, Some(&metadata)),
+            //custom
+            max_supply: MAX_SUPPLY,
+            whitelist: LookupMap::new(StorageKey::Whitelist.try_to_vec().unwrap()),
         }
+    }
+    #[init(ignore_state)]
+    pub fn migrate(owner_id: AccountId) -> Self {
+        let prev: Contract = env::state_read().expect("ERR_NOT_INITIALIZED");
+        assert_eq!(
+            prev.tokens.owner_id, owner_id,
+            "Only owner can call this method"
+        );
+        let metadata = prev.metadata.get().unwrap();
+        let prev_base_uri = prev.metadata.get().unwrap().base_uri.unwrap();
+        let this = Contract {
+            tokens: prev.tokens,
+            metadata: LazyOption::new(StorageKey::Metadata, Some(&metadata)),
+            max_supply: prev.max_supply,
+            whitelist: prev.whitelist,
+        };
+        this
+    }
+    pub fn assert_owner(&self, account_id: AccountId) {
+        assert_eq!(
+            self.tokens.owner_id, account_id,
+            "Only owner can call this method"
+        );
     }
 }
 
@@ -82,7 +116,7 @@ impl NonFungibleTokenMetadataProvider for Contract {
         self.metadata.get().unwrap()
     }
 }
-
+/*
 #[cfg(all(test, not(target_arch = "wasm32")))]
 mod tests {
     use near_sdk::test_utils::{accounts, VMContextBuilder};
@@ -300,3 +334,4 @@ mod tests {
         assert!(!contract.nft_is_approved(token_id.clone(), accounts(1), Some(1)));
     }
 }
+ */
