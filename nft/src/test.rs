@@ -1,9 +1,13 @@
 use super::*;
-
+use near_sdk::{ONE_NEAR, ONE_YOCTO};
 #[cfg(all(test, not(target_arch = "wasm32")))]
 mod tests {
+    use std::convert::TryInto;
+
     use near_sdk::test_utils::{accounts, VMContextBuilder};
     use near_sdk::testing_env;
+
+    use crate::royalty::Payouts;
 
     use super::*;
 
@@ -54,6 +58,22 @@ mod tests {
         assert_eq!(token.owner_id, accounts(0));
 
         assert_eq!(token.approved_account_ids.unwrap(), HashMap::new());
+    }
+    #[test]
+    fn test_mint_multi() {
+        let mut context = get_context(accounts(0));
+        testing_env!(context.build());
+        let mut contract = Contract::new_default_meta(accounts(0).into());
+
+        testing_env!(context
+            .storage_usage(env::storage_usage())
+            .attached_deposit(MINT_COST * 3)
+            .predecessor_account_id(accounts(0))
+            .build());
+
+        let token = contract.nft_mint_multi(3);
+
+        assert_eq!(token.len(), 3);
     }
 
     #[test]
@@ -213,5 +233,37 @@ mod tests {
             .attached_deposit(0)
             .build());
         assert!(!contract.nft_is_approved(token.token_id.clone(), accounts(1), Some(1)));
+    }
+    #[test]
+    fn test_royalty() {
+        let mut context = get_context(accounts(0));
+        testing_env!(context.build());
+        let mut contract = Contract::new_default_meta(accounts(0).into());
+        let balance = env::account_balance();
+        println!("balance before: {:?}", balance);
+        testing_env!(context
+            .storage_usage(env::storage_usage())
+            .attached_deposit(MINT_COST)
+            .predecessor_account_id(accounts(0))
+            .build());
+        let token = contract.nft_mint();
+
+        contract.nft_approve(token.token_id.clone(), accounts(1), None);
+        testing_env!(context
+            .storage_usage(env::storage_usage())
+            .attached_deposit(ONE_YOCTO)
+            .predecessor_account_id(accounts(0))
+            .build());
+        contract.nft_transfer_payout(
+            accounts(1),
+            token.token_id,
+            None,
+            None,
+            (10 * ONE_NEAR).try_into().unwrap(),
+            None,
+        );
+
+        let balance = env::account_balance();
+        println!("balance after: {:?}", balance);
     }
 }

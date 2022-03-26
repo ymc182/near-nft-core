@@ -10,7 +10,7 @@ use std::collections::HashMap;
 pub struct Payout {
     pub payout: HashMap<AccountId, U128>,
 }
-#[derive(BorshSerialize, BorshDeserialize, Deserialize, Serialize, Default)]
+#[derive(BorshSerialize, BorshDeserialize, Deserialize, Serialize, Default, Debug)]
 #[serde(crate = "near_sdk::serde")]
 pub struct Royalties {
     pub accounts: HashMap<AccountId, u8>,

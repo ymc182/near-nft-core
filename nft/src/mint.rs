@@ -4,7 +4,11 @@ use near_sdk::require;
 #[near_bindgen]
 impl Contract {
     #[payable]
-    pub fn free_nft_mint(&mut self) -> Token {
+    pub fn whitelist_nft_mint(&mut self) -> Token {
+        require!(
+            env::attached_deposit() >= MINT_COST, //6.66 NEAR 6660000000000000000000000
+            "deposit must be 5 NEAR"
+        );
         let whitelist_amount = self.whitelist.get(&env::predecessor_account_id());
         if let Some(amount) = whitelist_amount {
             let new_amount = amount - 1;
@@ -19,6 +23,19 @@ impl Contract {
         } else {
             panic!("Account Id is not whitelisted");
         }
+    }
+    #[payable]
+    pub fn nft_mint_multi(&mut self, amount: u128) -> Vec<Token> {
+        let mut result: Vec<Token> = Vec::new();
+        require!(
+            env::attached_deposit() >= MINT_COST * amount, //6.66 NEAR 6660000000000000000000000
+            "deposit must be 5 NEAR"
+        );
+        for _ in 0..amount {
+            let token = self.internal_nft_mint(env::predecessor_account_id());
+            result.push(token);
+        }
+        result
     }
     #[payable]
     pub fn nft_mint(&mut self) -> Token {
