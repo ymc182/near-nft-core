@@ -56,7 +56,6 @@ mod tests {
         let token = contract.nft_mint();
         assert_eq!(token.token_id, token_id);
         assert_eq!(token.owner_id, accounts(0));
-
         assert_eq!(token.approved_account_ids.unwrap(), HashMap::new());
     }
     #[test]

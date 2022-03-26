@@ -7,7 +7,11 @@ impl Contract {
     pub fn whitelist_nft_mint(&mut self) -> Token {
         require!(
             env::attached_deposit() >= MINT_COST, //6.66 NEAR 6660000000000000000000000
-            "deposit must be 5 NEAR"
+            "Not enough attached deposit"
+        );
+        require!(
+            self.pre_sale_active || self.sales_active,
+            "Pre-sale is not active"
         );
         let whitelist_amount = self.whitelist.get(&env::predecessor_account_id());
         if let Some(amount) = whitelist_amount {
@@ -29,7 +33,7 @@ impl Contract {
         let mut result: Vec<Token> = Vec::new();
         require!(
             env::attached_deposit() >= MINT_COST * amount, //6.66 NEAR 6660000000000000000000000
-            "deposit must be 5 NEAR"
+            "Not enough attached deposit"
         );
         for _ in 0..amount {
             let token = self.internal_nft_mint(env::predecessor_account_id());
@@ -39,14 +43,15 @@ impl Contract {
     }
     #[payable]
     pub fn nft_mint(&mut self) -> Token {
+        require!(self.sales_active, "Public sales is not active");
         require!(
             env::attached_deposit() >= MINT_COST, //6.66 NEAR 6660000000000000000000000
-            "deposit must be 5 NEAR"
+            "Not enough attached deposit"
         );
         self.internal_nft_mint(env::predecessor_account_id())
     }
     #[payable]
-    pub fn internal_nft_mint(&mut self, receiver_id: AccountId) -> Token {
+    fn internal_nft_mint(&mut self, receiver_id: AccountId) -> Token {
         let supply: U128 = self.tokens.nft_total_supply();
         require!(
             supply.0 < MAX_SUPPLY,

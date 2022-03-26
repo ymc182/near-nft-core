@@ -16,4 +16,11 @@ impl Contract {
         self.apply_whitelist
             .insert(&env::predecessor_account_id(), &false);
     }
+    pub fn get_applied_id(&self) -> Vec<AccountId> {
+        let mut result: Vec<AccountId> = Vec::new();
+        for (key, _value) in self.apply_whitelist.iter() {
+            result.push(key.clone());
+        }
+        result
+    }
 }

@@ -4,26 +4,20 @@ use near_contract_standards::non_fungible_token::metadata::{
 use near_contract_standards::non_fungible_token::NonFungibleToken;
 use near_contract_standards::non_fungible_token::{Token, TokenId};
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
-use near_sdk::collections::{LazyOption, LookupMap};
+use near_sdk::collections::{LazyOption, LookupMap, UnorderedMap};
 use near_sdk::json_types::U128;
 use near_sdk::{
     env, near_bindgen, require, AccountId, BorshStorageKey, PanicOnDefault, Promise, PromiseOrValue,
 };
 use std::collections::HashMap;
 
+mod constants;
 mod mint;
 mod royalty;
 mod test;
 mod whitelist;
 use crate::royalty::Royalties;
-const NFT_NAME: &str = "Nephilim";
-const NFT_SYMBOL: &str = "Nep";
-const NFT_BASE_URI: &str = "ipfs://nftFolder/";
-//6660000000000000000000000
-const MINT_COST: u128 = 6660000000000000000000000;
-const MAX_SUPPLY: u128 = 1000;
-const NFT_TOKEN_DESCRIPTION: &str = "Nephilim Token";
-const DATA_IMAGE_SVG_NEAR_ICON: &str = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 288 288'%3E%3Cg id='l' data-name='l'%3E%3Cpath d='M187.58,79.81l-30.1,44.69a3.2,3.2,0,0,0,4.75,4.2L191.86,103a1.2,1.2,0,0,1,2,.91v80.46a1.2,1.2,0,0,1-2.12.77L102.18,77.93A15.35,15.35,0,0,0,90.47,72.5H87.34A15.34,15.34,0,0,0,72,87.84V201.16A15.34,15.34,0,0,0,87.34,216.5h0a15.35,15.35,0,0,0,13.08-7.31l30.1-44.69a3.2,3.2,0,0,0-4.75-4.2L96.14,186a1.2,1.2,0,0,1-2-.91V104.61a1.2,1.2,0,0,1,2.12-.77l89.55,107.23a15.35,15.35,0,0,0,11.71,5.43h3.13A15.34,15.34,0,0,0,216,201.16V87.84A15.34,15.34,0,0,0,200.66,72.5h0A15.35,15.35,0,0,0,187.58,79.81Z'/%3E%3C/g%3E%3C/svg%3E";
+use constants::*;
 
 #[near_bindgen]
 #[derive(BorshDeserialize, BorshSerialize, PanicOnDefault)]
@@ -34,7 +28,10 @@ pub struct Contract {
     max_supply: u128,
     whitelist: LookupMap<AccountId, u32>,
     royalties: LazyOption<Royalties>,
-    apply_whitelist: LookupMap<AccountId, bool>, //reserved
+    apply_whitelist: UnorderedMap<AccountId, bool>,
+    //Sales Control
+    sales_active: bool,
+    pre_sale_active: bool,
 }
 #[derive(BorshSerialize, BorshStorageKey)]
 enum StorageKey {
@@ -91,9 +88,13 @@ impl Contract {
             metadata: LazyOption::new(StorageKey::Metadata, Some(&metadata)),
             //custom
             max_supply: MAX_SUPPLY,
+            sales_active: false,
+            pre_sale_active: false,
             whitelist: LookupMap::new(StorageKey::Whitelist.try_to_vec().unwrap()),
             royalties: LazyOption::new(StorageKey::Royalties, Some(&royalties)),
-            apply_whitelist: LookupMap::new(StorageKey::WhitelistApplication.try_to_vec().unwrap()),
+            apply_whitelist: UnorderedMap::new(
+                StorageKey::WhitelistApplication.try_to_vec().unwrap(),
+            ),
         }
     }
     #[init(ignore_state)]
@@ -118,6 +119,8 @@ impl Contract {
             whitelist: prev.whitelist,
             royalties: LazyOption::new(StorageKey::Royalties, Some(&royalties)),
             apply_whitelist: prev.apply_whitelist,
+            sales_active: prev.sales_active,
+            pre_sale_active: prev.pre_sale_active,
         };
 
         this
@@ -127,6 +130,15 @@ impl Contract {
             self.tokens.owner_id == account_id,
             "Only owner can call this method"
         );
+    }
+
+    pub fn flip_public_sale(&mut self) {
+        self.assert_owner(env::predecessor_account_id());
+        self.sales_active = !self.sales_active;
+    }
+    pub fn flip_presale(&mut self) {
+        self.assert_owner(env::predecessor_account_id());
+        self.pre_sale_active = !self.pre_sale_active;
     }
 }
 
