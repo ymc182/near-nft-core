@@ -2,7 +2,7 @@ use near_contract_standards::non_fungible_token::metadata::{
     NFTContractMetadata, NonFungibleTokenMetadataProvider, TokenMetadata, NFT_METADATA_SPEC,
 };
 use near_contract_standards::non_fungible_token::NonFungibleToken;
-use near_contract_standards::non_fungible_token::{Token, TokenId};
+use near_contract_standards::non_fungible_token::{events, Token, TokenId};
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::collections::{LazyOption, LookupMap, UnorderedMap};
 use near_sdk::json_types::U128;
@@ -101,7 +101,8 @@ impl Contract {
     pub fn migrate(owner_id: AccountId) -> Self {
         let prev: Contract = env::state_read().expect("ERR_NOT_INITIALIZED");
         assert_eq!(
-            prev.tokens.owner_id, owner_id,
+            prev.tokens.owner_id,
+            env::predecessor_account_id(),
             "Only owner can call this method"
         );
         let mut perpetual_royalties: HashMap<AccountId, u8> = HashMap::new();
@@ -115,7 +116,7 @@ impl Contract {
         let this = Contract {
             tokens: prev.tokens,
             metadata: LazyOption::new(StorageKey::Metadata, Some(&metadata)),
-            max_supply: prev.max_supply,
+            max_supply: MAX_SUPPLY,
             whitelist: prev.whitelist,
             royalties: LazyOption::new(StorageKey::Royalties, Some(&royalties)),
             apply_whitelist: prev.apply_whitelist,
@@ -124,6 +125,23 @@ impl Contract {
         };
 
         this
+    }
+
+    pub fn update_uri(&mut self, uri: String) {
+        self.assert_owner(env::predecessor_account_id());
+        let new_metadata = NFTContractMetadata {
+            spec: NFT_METADATA_SPEC.to_string(),
+            name: NFT_NAME.to_string(),
+            symbol: NFT_SYMBOL.to_string(),
+            icon: Some(DATA_IMAGE_SVG_NEAR_ICON.to_string()),
+            base_uri: Some(uri),
+            reference: None,
+            reference_hash: None,
+        };
+        self.metadata = LazyOption::new(
+            StorageKey::Metadata.try_to_vec().unwrap(),
+            Some(&new_metadata),
+        )
     }
     pub fn assert_owner(&self, account_id: AccountId) {
         require!(

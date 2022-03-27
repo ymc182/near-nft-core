@@ -1,5 +1,3 @@
-use super::*;
-use near_sdk::{ONE_NEAR, ONE_YOCTO};
 #[cfg(all(test, not(target_arch = "wasm32")))]
 mod tests {
     use std::convert::TryInto;
@@ -7,11 +5,9 @@ mod tests {
     use near_sdk::test_utils::{accounts, VMContextBuilder};
     use near_sdk::testing_env;
 
+    use super::super::*;
     use crate::royalty::Payouts;
-
-    use super::*;
-
-    const MINT_STORAGE_COST: u128 = 5870000000000000000000;
+    use near_sdk::{ONE_NEAR, ONE_YOCTO};
     const MINT_COST: u128 = 6660000000000000000000000;
 
     fn get_context(predecessor_account_id: AccountId) -> VMContextBuilder {
@@ -123,8 +119,23 @@ mod tests {
             .predecessor_account_id(accounts(0))
             .build());
         contract.add_to_whitelist(accounts(1), 1);
+        contract.apply_for_whitelist();
+        testing_env!(context
+            .storage_usage(env::storage_usage())
+            .attached_deposit(1)
+            .predecessor_account_id(accounts(2))
+            .build());
+        contract.apply_for_whitelist();
 
+        testing_env!(context
+            .storage_usage(env::storage_usage())
+            .attached_deposit(1)
+            .predecessor_account_id(accounts(1))
+            .build());
+        contract.apply_for_whitelist();
         assert!(contract.is_whitelisted(accounts(1)));
+        let a = contract.raffle_whitelist();
+        println!("Rand num:{}", a)
     }
 
     #[test]

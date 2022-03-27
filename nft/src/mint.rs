@@ -1,4 +1,5 @@
 use super::*;
+use near_contract_standards::non_fungible_token::events;
 use near_sdk::require;
 
 #[near_bindgen]
@@ -60,8 +61,8 @@ impl Contract {
         let token_id = (supply.0 + 1).to_string();
         let token_metadata: TokenMetadata = TokenMetadata {
             copies: None,
-            title: Some(format!("{}", token_id)),
-            media: Some(format!("{}.png", token_id)),
+            title: Some(format!("Nephilim#{}", token_id)),
+            media: Some(format!("{}.gif", token_id)),
             description: Some(NFT_TOKEN_DESCRIPTION.to_string()),
             expires_at: None,
             extra: None,
@@ -72,11 +73,19 @@ impl Contract {
             media_hash: None,
             updated_at: None,
         };
-        self.tokens.internal_mint_with_refund(
+
+        let token = self.tokens.internal_mint_with_refund(
             token_id,
             receiver_id,
             Some(token_metadata),
             Some(self.tokens.owner_id.clone()),
-        )
+        );
+        let event = events::NftMint {
+            owner_id: &token.owner_id,
+            memo: None,
+            token_ids: &[&token.token_id],
+        };
+        event.emit();
+        token
     }
 }
