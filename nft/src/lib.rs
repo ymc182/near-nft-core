@@ -2,7 +2,7 @@ use near_contract_standards::non_fungible_token::metadata::{
     NFTContractMetadata, NonFungibleTokenMetadataProvider, TokenMetadata, NFT_METADATA_SPEC,
 };
 use near_contract_standards::non_fungible_token::NonFungibleToken;
-use near_contract_standards::non_fungible_token::{events, Token, TokenId};
+use near_contract_standards::non_fungible_token::{Token, TokenId};
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::collections::{LazyOption, LookupMap, UnorderedMap};
 use near_sdk::json_types::U128;
@@ -26,7 +26,7 @@ pub struct Contract {
     metadata: LazyOption<NFTContractMetadata>,
     //custom
     max_supply: u128,
-    whitelist: LookupMap<AccountId, u32>,
+    whitelist: UnorderedMap<AccountId, u32>,
     royalties: LazyOption<Royalties>,
     apply_whitelist: UnorderedMap<AccountId, bool>,
     //Sales Control
@@ -90,7 +90,7 @@ impl Contract {
             max_supply: MAX_SUPPLY,
             sales_active: false,
             pre_sale_active: false,
-            whitelist: LookupMap::new(StorageKey::Whitelist.try_to_vec().unwrap()),
+            whitelist: UnorderedMap::new(StorageKey::Whitelist.try_to_vec().unwrap()),
             royalties: LazyOption::new(StorageKey::Royalties, Some(&royalties)),
             apply_whitelist: UnorderedMap::new(
                 StorageKey::WhitelistApplication.try_to_vec().unwrap(),
@@ -111,6 +111,7 @@ impl Contract {
             accounts: perpetual_royalties,
             percent: 5,
         };
+
         let metadata = prev.metadata.get().unwrap();
         // let prev_base_uri = prev.metadata.get().unwrap().base_uri.unwrap();
         let this = Contract {
@@ -157,6 +158,13 @@ impl Contract {
     pub fn flip_presale(&mut self) {
         self.assert_owner(env::predecessor_account_id());
         self.pre_sale_active = !self.pre_sale_active;
+    }
+    pub fn transfer_ownership(&mut self, account_id: AccountId) {
+        self.assert_owner(env::predecessor_account_id());
+        self.tokens.owner_id = account_id;
+    }
+    pub fn get_owner(&self) -> AccountId {
+        return self.tokens.owner_id.clone();
     }
 }
 

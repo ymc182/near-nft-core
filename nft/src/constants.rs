@@ -5,9 +5,9 @@ pub const NFT_SYMBOL: &str = "Nep";
 pub const NFT_BASE_URI: &str =
     "https://ewtd.mypinata.cloud/ipfs/QmRDiXs9eE4bC2up9FKMDFwDmN7r4rAoTTfiTL5iULrbnw";
 //6660000000000000000000000
-pub const MINT_COST: u128 = 6660000000000000000000000;
+pub const MINT_COST: u128 = 9990000000000000000000000;
 
-pub const MAX_SUPPLY: u128 = 3000;
+pub const MAX_SUPPLY: u128 = 1332;
 
 pub const NFT_TOKEN_DESCRIPTION: &str = "House of Nephilim Project Associated NFT";
 
