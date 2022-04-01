@@ -6,6 +6,10 @@ use near_sdk::require;
 impl Contract {
     #[payable]
     pub fn free_mint(&mut self) -> Token {
+        require!(
+            self.pre_sale_active || self.sales_active,
+            "Pre-sale is not active"
+        );
         if let Some(mut free_amount) = self.free_mint_list.get(&env::signer_account_id()) {
             free_amount -= 1;
             if free_amount <= 0 {
