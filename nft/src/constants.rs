@@ -3,7 +3,7 @@ pub const NFT_NAME: &str = "Nephilim";
 pub const NFT_SYMBOL: &str = "Nep";
 
 pub const NFT_BASE_URI: &str =
-    "https://ewtd.mypinata.cloud/ipfs/QmRDiXs9eE4bC2up9FKMDFwDmN7r4rAoTTfiTL5iULrbnw";
+    "https://ewtd.mypinata.cloud/ipfs/Qmdpcsm1Tu5UXnN9RQUiRvSaHuHHPZVBpBL4QcMyuMFRCr";
 //6660000000000000000000000
 pub const MINT_COST: u128 = 9990000000000000000000000;
 

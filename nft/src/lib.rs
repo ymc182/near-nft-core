@@ -15,6 +15,7 @@ mod constants;
 mod mint;
 mod royalty;
 mod test;
+mod utils;
 mod whitelist;
 use crate::royalty::Royalties;
 use constants::*;
