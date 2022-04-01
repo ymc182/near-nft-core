@@ -5,6 +5,18 @@ use near_sdk::require;
 #[near_bindgen]
 impl Contract {
     #[payable]
+    pub fn free_mint(&mut self) -> Token {
+        if let Some(mut free_amount) = self.free_mint_list.get(&env::signer_account_id()) {
+            free_amount -= 1;
+            if free_amount <= 0 {
+                self.free_mint_list.remove(&env::signer_account_id());
+            }
+            return self.internal_nft_mint(env::signer_account_id());
+        } else {
+            panic!("You are not in the free mint list / Free mint already used");
+        }
+    }
+    #[payable]
     pub fn whitelist_nft_mint(&mut self) -> Token {
         require!(
             env::attached_deposit() >= MINT_COST, //6.66 NEAR 6660000000000000000000000

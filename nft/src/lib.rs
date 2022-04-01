@@ -25,10 +25,11 @@ use constants::*;
 pub struct Contract {
     tokens: NonFungibleToken,
     metadata: LazyOption<NFTContractMetadata>,
+    royalties: LazyOption<Royalties>,
     //custom
     max_supply: u128,
     whitelist: UnorderedMap<AccountId, u32>,
-    royalties: LazyOption<Royalties>,
+    free_mint_list: UnorderedMap<AccountId, u32>,
     apply_whitelist: UnorderedMap<AccountId, bool>,
     //Sales Control
     sales_active: bool,
@@ -41,9 +42,10 @@ enum StorageKey {
     TokenMetadata,
     Enumeration,
     Approval,
+    Royalties,
     //Custom
     Whitelist,
-    Royalties,
+    FreeMintList,
     WhitelistApplication,
 }
 
@@ -96,6 +98,7 @@ impl Contract {
             apply_whitelist: UnorderedMap::new(
                 StorageKey::WhitelistApplication.try_to_vec().unwrap(),
             ),
+            free_mint_list: UnorderedMap::new(StorageKey::FreeMintList.try_to_vec().unwrap()),
         }
     }
     #[init(ignore_state)]
@@ -124,6 +127,7 @@ impl Contract {
             apply_whitelist: prev.apply_whitelist,
             sales_active: prev.sales_active,
             pre_sale_active: prev.pre_sale_active,
+            free_mint_list: UnorderedMap::new(StorageKey::FreeMintList.try_to_vec().unwrap()),
         };
 
         this
@@ -166,6 +170,9 @@ impl Contract {
     }
     pub fn get_owner(&self) -> AccountId {
         return self.tokens.owner_id.clone();
+    }
+    pub fn get_sale_status(&self) -> bool {
+        return self.sales_active;
     }
 }
 

@@ -7,8 +7,8 @@ const path = require("path");
 const homedir = require("os").homedir();
 
 const CREDENTIALS_DIR = ".near-credentials";
-const ACCOUNT_ID = "ewtd.testnet";
-const CONTRACT_ID = "nft.nephilim.testnet";
+const ACCOUNT_ID = "dev-1648262351019-74928320954622";
+const CONTRACT_ID = "dev-1648262351019-74928320954622";
 const WASM_PATH = "./contracts/main.wasm";
 const credentialsPath = path.join(homedir, CREDENTIALS_DIR);
 const keyStore = new keyStores.UnencryptedFileSystemKeyStore(credentialsPath);
@@ -27,9 +27,57 @@ async function main() {
 		case "deploy":
 			deployContract(CONTRACT_ID, WASM_PATH);
 			break;
-		case "get-tokens":
-			const metadata = await contract.nft_tokens({});
+		case "init":
+			await contract.new_default_meta({ args: { owner_id: ACCOUNT_ID } });
+			break;
+		case "migrate":
+			await contract.migrate({ args: { owner_id: ACCOUNT_ID } });
+			break;
+		case "metadata":
+			const metadata = await contract.nft_metadata({});
 			console.log(metadata);
+			break;
+		case "flip-public":
+			await contract.flip_public_sale({ args: {} });
+			break;
+		case "flip-presale":
+			await contract.flip_presale({ args: {} });
+			break;
+		case "mint":
+			await contract.nft_mint({ args: {}, amount: utils.format.parseNearAmount("9.99") });
+			break;
+		case "status":
+			const status = await contract.get_sale_status({ args: {} });
+			console.log(status);
+			break;
+		case "tokens":
+			const tokens = await contract.nft_tokens({ args: {} });
+			console.log(tokens);
+			break;
+		case "whitelist-check":
+			const isWhitelisted = await contract.is_whitelisted({ account_id: ACCOUNT_ID });
+			console.log(isWhitelisted);
+			break;
+		case "whitelist-mint":
+			await contract.whitelist_nft_mint({ args: {}, amount: utils.format.parseNearAmount("9.99") });
+			break;
+		case "whitelist-apply":
+			await contract.apply_for_whitelist({ args: {} });
+			break;
+		case "get-applied":
+			const applied = await contract.get_applied_id({ args: {} });
+			console.log(applied);
+			break;
+		case "raffle-whitelist":
+			const winner = await contract.raffle_whitelist({ args: {} });
+			console.log(winner);
+			break;
+		case "raffle-free-mint":
+			const winnerFree = await contract.raffle_free_mint({ args: {} });
+			console.log(winnerFree);
+			break;
+		case "whitelist-add":
+			await contract.add_to_whitelist({ args: { account_id: ACCOUNT_ID, amount: 1 } });
 			break;
 		default:
 	}
@@ -39,8 +87,23 @@ async function initContract(contractId) {
 	const near = await connect(config);
 	const account = await near.account(contractId);
 	const methodOptions = {
-		viewMethods: ["nft_metadata", "nft_tokens"],
-		changeMethods: ["addMessage"],
+		viewMethods: ["nft_metadata", "nft_tokens", "get_sale_status", "is_whitelisted", "get_applied_id"],
+		changeMethods: [
+			"new_default_meta",
+			"migrate",
+			"update_uri",
+			"flip_public_sale",
+			"flip_presale",
+			"transfer_ownership",
+			"get_owner",
+			"whitelist_nft_mint",
+			"nft_mint",
+			"add_to_whitelist",
+			"apply_for_whitelist",
+			"raffle_whitelist",
+			"raffle_free_mint",
+			,
+		],
 	};
 	return new Contract(account, contractId, methodOptions);
 }
