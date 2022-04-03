@@ -34,7 +34,7 @@ impl Contract {
         require!(self.apply_whitelist.len() > 0, "No applicants");
 
         let len: u32 = self.apply_whitelist.len().try_into().unwrap();
-        let rand = self.get_random_number(len);
+        let rand = get_random_number(len);
         let result = self
             .apply_whitelist
             .keys()
@@ -56,7 +56,7 @@ impl Contract {
         self.assert_owner(env::predecessor_account_id());
         require!(self.whitelist.len() > 0, "No Whitelist");
         let len: u32 = self.whitelist.len().try_into().unwrap();
-        let rand = self.get_random_number(len);
+        let rand = get_random_number(len);
         let result = self
             .whitelist
             .keys()
@@ -74,14 +74,5 @@ impl Contract {
             .as_str(),
         );
         result
-    }
-    pub(crate) fn get_random_number(&self, shift_amount: u32) -> u32 {
-        let mut seed = env::random_seed();
-
-        let seed_len = seed.len();
-        let mut arr: [u8; 4] = Default::default();
-        seed.rotate_left(shift_amount as usize % seed_len);
-        arr.copy_from_slice(&seed[..4]);
-        u32::from_le_bytes(arr)
     }
 }

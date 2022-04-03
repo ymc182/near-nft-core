@@ -33,6 +33,12 @@ async function main() {
 		case "migrate":
 			await contract.migrate({ args: { owner_id: ACCOUNT_ID } });
 			break;
+		case "update-uri":
+			await contract.update_uri({
+				args: { uri: "https://ewtd.mypinata.cloud/ipfs/QmTLoZs1v2WoYnG1UQF4h8j4wEfGwzALv2A8iw9zvTQU8m" },
+			});
+			break;
+
 		case "metadata":
 			const metadata = await contract.nft_metadata({});
 			console.log(metadata);

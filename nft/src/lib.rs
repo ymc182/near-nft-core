@@ -4,7 +4,7 @@ use near_contract_standards::non_fungible_token::metadata::{
 use near_contract_standards::non_fungible_token::NonFungibleToken;
 use near_contract_standards::non_fungible_token::{Token, TokenId};
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
-use near_sdk::collections::{LazyOption, UnorderedMap};
+use near_sdk::collections::{LazyOption, UnorderedMap, Vector};
 use near_sdk::json_types::U128;
 use near_sdk::{
     env, near_bindgen, require, AccountId, BorshStorageKey, PanicOnDefault, Promise, PromiseOrValue,
@@ -19,6 +19,7 @@ mod utils;
 mod whitelist;
 use crate::royalty::Royalties;
 use constants::*;
+pub use utils::get_random_number;
 
 #[near_bindgen]
 #[derive(BorshDeserialize, BorshSerialize, PanicOnDefault)]
@@ -31,6 +32,8 @@ pub struct Contract {
     whitelist: UnorderedMap<AccountId, u32>,
     free_mint_list: UnorderedMap<AccountId, u32>,
     apply_whitelist: UnorderedMap<AccountId, bool>,
+
+    available_nft: Vector<String>,
     //Sales Control
     sales_active: bool,
     pre_sale_active: bool,
@@ -47,6 +50,7 @@ enum StorageKey {
     Whitelist,
     FreeMintList,
     WhitelistApplication,
+    AvailableNft,
 }
 
 #[near_bindgen]
@@ -80,7 +84,7 @@ impl Contract {
             accounts: perpetual_royalties,
             percent: 5,
         };
-        Self {
+        let mut this = Self {
             tokens: NonFungibleToken::new(
                 StorageKey::NonFungibleToken,
                 owner_id.clone(),
@@ -99,7 +103,13 @@ impl Contract {
                 StorageKey::WhitelistApplication.try_to_vec().unwrap(),
             ),
             free_mint_list: UnorderedMap::new(StorageKey::FreeMintList.try_to_vec().unwrap()),
+            available_nft: Vector::new(StorageKey::AvailableNft.try_to_vec().unwrap()),
+        };
+        for i in 0..MAX_SUPPLY {
+            this.available_nft.push(&i.to_string());
         }
+
+        this
     }
     #[init(ignore_state)]
     pub fn migrate(owner_id: AccountId) -> Self {
@@ -127,7 +137,8 @@ impl Contract {
             apply_whitelist: prev.apply_whitelist,
             sales_active: prev.sales_active,
             pre_sale_active: prev.pre_sale_active,
-            free_mint_list: UnorderedMap::new(StorageKey::FreeMintList.try_to_vec().unwrap()),
+            free_mint_list: prev.free_mint_list,
+            available_nft: prev.available_nft,
         };
 
         this

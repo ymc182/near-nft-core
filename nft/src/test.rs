@@ -75,8 +75,6 @@ mod tests {
         let mut context = get_context(accounts(0));
         testing_env!(context.build());
         let mut contract = Contract::new_default_meta(accounts(0).into());
-        let a = contract.get_random_number(5);
-        println!("{}", a);
     }
     #[test]
     fn test_add_white_list() {
