@@ -7,8 +7,8 @@ const path = require("path");
 const homedir = require("os").homedir();
 
 const CREDENTIALS_DIR = ".near-credentials";
-const ACCOUNT_ID = "dev-1648262351019-74928320954622";
-const CONTRACT_ID = "dev-1648262351019-74928320954622";
+const ACCOUNT_ID = "nephilim.testnet";
+const CONTRACT_ID = "nft4.nephilim.testnet";
 const WASM_PATH = "./contracts/main.wasm";
 const credentialsPath = path.join(homedir, CREDENTIALS_DIR);
 const keyStore = new keyStores.UnencryptedFileSystemKeyStore(credentialsPath);
@@ -50,7 +50,10 @@ async function main() {
 			await contract.flip_presale({ args: {} });
 			break;
 		case "mint":
-			await contract.nft_mint({ args: {}, amount: utils.format.parseNearAmount("9.99") });
+			for (let i = 0; i < 1332; i++) {
+				await contract.nft_mint({ args: {}, amount: utils.format.parseNearAmount("9.99"), gas: 300000000000000 });
+			}
+
 			break;
 		case "status":
 			const status = await contract.get_sale_status({ args: {} });
@@ -91,7 +94,7 @@ async function main() {
 
 async function initContract(contractId) {
 	const near = await connect(config);
-	const account = await near.account(contractId);
+	const account = await near.account(ACCOUNT_ID);
 	const methodOptions = {
 		viewMethods: ["nft_metadata", "nft_tokens", "get_sale_status", "is_whitelisted", "get_applied_id"],
 		changeMethods: [

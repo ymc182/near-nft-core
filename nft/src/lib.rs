@@ -10,15 +10,20 @@ use near_sdk::{
     env, near_bindgen, require, AccountId, BorshStorageKey, PanicOnDefault, Promise, PromiseOrValue,
 };
 use std::collections::HashMap;
+use std::convert::TryInto;
 
 mod constants;
 mod mint;
+
+mod raffle;
 mod royalty;
 mod test;
 mod utils;
 mod whitelist;
+use crate::raffle::Raffle;
 use crate::royalty::Royalties;
 use constants::*;
+
 pub use utils::get_random_number;
 
 #[near_bindgen]
@@ -33,7 +38,7 @@ pub struct Contract {
     free_mint_list: UnorderedMap<AccountId, u32>,
     apply_whitelist: UnorderedMap<AccountId, bool>,
 
-    available_nft: Vector<String>,
+    available_nft: Raffle,
     //Sales Control
     sales_active: bool,
     pre_sale_active: bool,
@@ -84,7 +89,7 @@ impl Contract {
             accounts: perpetual_royalties,
             percent: 5,
         };
-        let mut this = Self {
+        let this = Self {
             tokens: NonFungibleToken::new(
                 StorageKey::NonFungibleToken,
                 owner_id.clone(),
@@ -103,11 +108,11 @@ impl Contract {
                 StorageKey::WhitelistApplication.try_to_vec().unwrap(),
             ),
             free_mint_list: UnorderedMap::new(StorageKey::FreeMintList.try_to_vec().unwrap()),
-            available_nft: Vector::new(StorageKey::AvailableNft.try_to_vec().unwrap()),
+            available_nft: Raffle::new(
+                StorageKey::AvailableNft.try_to_vec().unwrap(),
+                MAX_SUPPLY.try_into().unwrap(),
+            ),
         };
-        for i in 0..MAX_SUPPLY {
-            this.available_nft.push(&i.to_string());
-        }
 
         this
     }
@@ -138,7 +143,10 @@ impl Contract {
             sales_active: prev.sales_active,
             pre_sale_active: prev.pre_sale_active,
             free_mint_list: prev.free_mint_list,
-            available_nft: prev.available_nft,
+            available_nft: Raffle::new(
+                StorageKey::AvailableNft.try_to_vec().unwrap(),
+                MAX_SUPPLY.try_into().unwrap(),
+            ),
         };
 
         this
@@ -160,6 +168,25 @@ impl Contract {
             Some(&new_metadata),
         )
     }
+    /*
+    pub fn init_ava_a(&mut self) {
+        self.assert_owner(env::predecessor_account_id());
+        for i in 1..=666 {
+            self.available_nft.push(&(i as u32));
+        }
+    }
+    pub fn init_ava_b(&mut self) {
+        self.assert_owner(env::predecessor_account_id());
+        for i in 667..=1000 {
+            self.available_nft.push(&(i as u32));
+        }
+    }
+    pub fn init_ava_c(&mut self) {
+        self.assert_owner(env::predecessor_account_id());
+        for i in 1001..=1332 {
+            self.available_nft.push(&i);
+        }
+    } */
     pub fn assert_owner(&self, account_id: AccountId) {
         require!(
             self.tokens.owner_id == account_id,

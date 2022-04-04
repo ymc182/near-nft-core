@@ -7,7 +7,7 @@ pub const NFT_BASE_URI: &str =
 //6660000000000000000000000
 pub const MINT_COST: u128 = 9990000000000000000000000;
 
-pub const MAX_SUPPLY: u128 = 1332;
+pub const MAX_SUPPLY: u128 = 3;
 
 pub const NFT_TOKEN_DESCRIPTION: &str = "House of Nephilim Project Associated NFT";
 

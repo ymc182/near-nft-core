@@ -34,7 +34,7 @@ impl Contract {
         require!(self.apply_whitelist.len() > 0, "No applicants");
 
         let len: u32 = self.apply_whitelist.len().try_into().unwrap();
-        let rand = get_random_number(len);
+        let rand = get_random_number(len.into());
         let result = self
             .apply_whitelist
             .keys()
@@ -56,7 +56,7 @@ impl Contract {
         self.assert_owner(env::predecessor_account_id());
         require!(self.whitelist.len() > 0, "No Whitelist");
         let len: u32 = self.whitelist.len().try_into().unwrap();
-        let rand = get_random_number(len);
+        let rand = get_random_number(len.into());
         let result = self
             .whitelist
             .keys()

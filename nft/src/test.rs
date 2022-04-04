@@ -47,12 +47,17 @@ mod tests {
             .attached_deposit(MINT_COST)
             .predecessor_account_id(accounts(0))
             .build());
+        contract.flip_public_sale();
+        for _ in 0..10 {
+            let token = contract.nft_mint();
+            println!("{:?}", token);
+        }
 
-        let token_id = "1".to_string();
-        let token = contract.nft_mint();
-        assert_eq!(token.token_id, token_id);
-        assert_eq!(token.owner_id, accounts(0));
-        assert_eq!(token.approved_account_ids.unwrap(), HashMap::new());
+        /*
+        println!("{:?}", token2);
+        println!("{:?}", token3); */
+        /*  assert_eq!(token.owner_id, accounts(0));
+        assert_eq!(token.approved_account_ids.unwrap(), HashMap::new()); */
     }
     #[test]
     fn test_mint_multi() {

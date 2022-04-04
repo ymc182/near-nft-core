@@ -6,7 +6,7 @@ impl Contract {
         MAX_SUPPLY
     }
 }
-pub fn get_random_number(shift_amount: u32) -> u32 {
+pub fn get_random_number(shift_amount: u128) -> u32 {
     let mut seed = env::random_seed();
 
     let seed_len = seed.len();

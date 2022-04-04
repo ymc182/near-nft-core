@@ -70,11 +70,15 @@ impl Contract {
     #[payable]
     fn internal_nft_mint(&mut self, receiver_id: AccountId) -> Token {
         let supply: U128 = self.tokens.nft_total_supply();
+
         require!(
             supply.0 < MAX_SUPPLY,
             "NFT total supply has reached maximum"
         );
-        let token_id = (supply.0 + 1).to_string();
+        let offset = 0; //first number of next drop
+        let token_id = (self.available_nft.draw() + offset).to_string();
+
+        /* let token_id = (supply.0 + 1).to_string(); */
         let token_metadata: TokenMetadata = TokenMetadata {
             copies: None,
             title: Some(format!("Nephilim#{}", token_id)),
@@ -102,6 +106,7 @@ impl Contract {
             token_ids: &[&token.token_id],
         };
         event.emit();
+
         token
     }
 }
