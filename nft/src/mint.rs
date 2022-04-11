@@ -60,11 +60,12 @@ impl Contract {
     }
     #[payable]
     pub fn nft_mint(&mut self) -> Token {
-        require!(self.sales_active, "Public sales is not active");
         require!(
             env::attached_deposit() >= MINT_COST, //6.66 NEAR 6660000000000000000000000
             "Not enough attached deposit"
         );
+        require!(self.sales_active, "Public sales is not active");
+
         self.internal_nft_mint(env::predecessor_account_id())
     }
     #[payable]
@@ -72,11 +73,11 @@ impl Contract {
         let supply: U128 = self.tokens.nft_total_supply();
 
         require!(
-            supply.0 < MAX_SUPPLY,
+            supply.0 < self.max_supply,
             "NFT total supply has reached maximum"
         );
-        let offset = 0; //first number of next drop
-        let token_id = (self.available_nft.draw() + offset).to_string();
+        let offset = OFFSET as u64; //first number of next drop
+        let token_id = (self.available_nft.draw() + offset + 1).to_string();
 
         /* let token_id = (supply.0 + 1).to_string(); */
         let token_metadata: TokenMetadata = TokenMetadata {

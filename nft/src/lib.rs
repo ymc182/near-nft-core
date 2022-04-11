@@ -121,7 +121,7 @@ impl Contract {
         let prev: Contract = env::state_read().expect("ERR_NOT_INITIALIZED");
         assert_eq!(
             prev.tokens.owner_id,
-            env::predecessor_account_id(),
+            env::signer_account_id(),
             "Only owner can call this method"
         );
         let mut perpetual_royalties: HashMap<AccountId, u8> = HashMap::new();
@@ -153,7 +153,7 @@ impl Contract {
     }
 
     pub fn update_uri(&mut self, uri: String) {
-        self.assert_owner(env::predecessor_account_id());
+        self.assert_owner(env::signer_account_id());
         let new_metadata = NFTContractMetadata {
             spec: NFT_METADATA_SPEC.to_string(),
             name: NFT_NAME.to_string(),
@@ -168,25 +168,6 @@ impl Contract {
             Some(&new_metadata),
         )
     }
-    /*
-    pub fn init_ava_a(&mut self) {
-        self.assert_owner(env::predecessor_account_id());
-        for i in 1..=666 {
-            self.available_nft.push(&(i as u32));
-        }
-    }
-    pub fn init_ava_b(&mut self) {
-        self.assert_owner(env::predecessor_account_id());
-        for i in 667..=1000 {
-            self.available_nft.push(&(i as u32));
-        }
-    }
-    pub fn init_ava_c(&mut self) {
-        self.assert_owner(env::predecessor_account_id());
-        for i in 1001..=1332 {
-            self.available_nft.push(&i);
-        }
-    } */
     pub fn assert_owner(&self, account_id: AccountId) {
         require!(
             self.tokens.owner_id == account_id,
@@ -195,15 +176,15 @@ impl Contract {
     }
 
     pub fn flip_public_sale(&mut self) {
-        self.assert_owner(env::predecessor_account_id());
+        self.assert_owner(env::signer_account_id());
         self.sales_active = !self.sales_active;
     }
     pub fn flip_presale(&mut self) {
-        self.assert_owner(env::predecessor_account_id());
+        self.assert_owner(env::signer_account_id());
         self.pre_sale_active = !self.pre_sale_active;
     }
     pub fn transfer_ownership(&mut self, account_id: AccountId) {
-        self.assert_owner(env::predecessor_account_id());
+        self.assert_owner(env::signer_account_id());
         self.tokens.owner_id = account_id;
     }
     pub fn get_owner(&self) -> AccountId {
@@ -211,6 +192,14 @@ impl Contract {
     }
     pub fn get_sale_status(&self) -> bool {
         return self.sales_active;
+    }
+    pub fn update_drop_supply(&mut self, add_supply: u128) {
+        self.assert_owner(env::signer_account_id());
+        self.max_supply = add_supply;
+        self.available_nft = Raffle::new(
+            StorageKey::AvailableNft.try_to_vec().unwrap(),
+            add_supply.try_into().unwrap(),
+        )
     }
 }
 

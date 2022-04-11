@@ -7,15 +7,15 @@ const path = require("path");
 const homedir = require("os").homedir();
 
 const CREDENTIALS_DIR = ".near-credentials";
-const ACCOUNT_ID = "nephilim.testnet";
-const CONTRACT_ID = "nft4.nephilim.testnet";
+const ACCOUNT_ID = "nephilim.near";
+const CONTRACT_ID = "nft.nephilim.near";
 const WASM_PATH = "./contracts/main.wasm";
 const credentialsPath = path.join(homedir, CREDENTIALS_DIR);
 const keyStore = new keyStores.UnencryptedFileSystemKeyStore(credentialsPath);
 const config = {
 	keyStore,
-	networkId: "testnet",
-	nodeUrl: "https://rpc.testnet.near.org",
+	networkId: "mainnet",
+	nodeUrl: "https://rpc.mainnet.near.org",
 	headers: {},
 };
 
@@ -50,13 +50,10 @@ async function main() {
 			await contract.flip_presale({ args: {} });
 			break;
 		case "mint":
-			for (let i = 0; i < 1332; i++) {
-				await contract.nft_mint({ args: {}, amount: utils.format.parseNearAmount("9.99"), gas: 300000000000000 });
-			}
-
+			await contract.nft_mint({ args: {}, amount: utils.format.parseNearAmount("6.66"), gas: 300000000000000 });
 			break;
 		case "status":
-			const status = await contract.get_sale_status({ args: {} });
+			const status = await contract.get_sale_status({});
 			console.log(status);
 			break;
 		case "tokens":

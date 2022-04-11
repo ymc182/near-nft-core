@@ -3,7 +3,7 @@ use super::*;
 #[near_bindgen]
 impl Contract {
     pub fn get_max_supply(&self) -> u128 {
-        MAX_SUPPLY
+        self.max_supply
     }
 }
 pub fn get_random_number(shift_amount: u128) -> u32 {
