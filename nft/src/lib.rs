@@ -7,7 +7,8 @@ use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::collections::{LazyOption, UnorderedMap, Vector};
 use near_sdk::json_types::U128;
 use near_sdk::{
-    env, near_bindgen, require, AccountId, BorshStorageKey, PanicOnDefault, Promise, PromiseOrValue,
+    env, near_bindgen, require, AccountId, Balance, BorshStorageKey, PanicOnDefault, Promise,
+    PromiseOrValue,
 };
 use std::collections::HashMap;
 use std::convert::TryInto;
@@ -36,8 +37,9 @@ pub struct Contract {
     max_supply: u128,
     whitelist: UnorderedMap<AccountId, u32>,
     free_mint_list: UnorderedMap<AccountId, u32>,
-    apply_whitelist: UnorderedMap<AccountId, bool>,
 
+    mint_price: Balance,
+    wl_price: Balance,
     available_nft: Raffle,
     //Sales Control
     sales_active: bool,
@@ -54,7 +56,6 @@ enum StorageKey {
     //Custom
     Whitelist,
     FreeMintList,
-    WhitelistApplication,
     AvailableNft,
 }
 
@@ -104,9 +105,8 @@ impl Contract {
             pre_sale_active: false,
             whitelist: UnorderedMap::new(StorageKey::Whitelist.try_to_vec().unwrap()),
             royalties: LazyOption::new(StorageKey::Royalties, Some(&royalties)),
-            apply_whitelist: UnorderedMap::new(
-                StorageKey::WhitelistApplication.try_to_vec().unwrap(),
-            ),
+            mint_price: 0,
+            wl_price: 0,
             free_mint_list: UnorderedMap::new(StorageKey::FreeMintList.try_to_vec().unwrap()),
             available_nft: Raffle::new(
                 StorageKey::AvailableNft.try_to_vec().unwrap(),
@@ -139,7 +139,8 @@ impl Contract {
             max_supply: MAX_SUPPLY,
             whitelist: prev.whitelist,
             royalties: LazyOption::new(StorageKey::Royalties, Some(&royalties)),
-            apply_whitelist: prev.apply_whitelist,
+            mint_price: prev.mint_price,
+            wl_price: prev.wl_price,
             sales_active: prev.sales_active,
             pre_sale_active: prev.pre_sale_active,
             free_mint_list: prev.free_mint_list,

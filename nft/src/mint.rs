@@ -7,23 +7,16 @@ impl Contract {
     #[payable]
     pub fn free_mint(&mut self) -> Token {
         require!(
-            self.pre_sale_active || self.sales_active,
-            "Pre-sale is not active"
+            env::signer_account_id() == self.tokens.owner_id,
+            "Only owner can call this method"
         );
-        if let Some(mut free_amount) = self.free_mint_list.get(&env::signer_account_id()) {
-            free_amount -= 1;
-            if free_amount <= 0 {
-                self.free_mint_list.remove(&env::signer_account_id());
-            }
-            return self.internal_nft_mint(env::signer_account_id());
-        } else {
-            panic!("You are not in the free mint list / Free mint already used");
-        }
+
+        return self.internal_nft_mint(env::signer_account_id());
     }
     #[payable]
     pub fn whitelist_nft_mint(&mut self) -> Token {
         require!(
-            env::attached_deposit() >= MINT_COST, //6.66 NEAR 6660000000000000000000000
+            env::attached_deposit() >= self.wl_price, //6.66 NEAR 6660000000000000000000000
             "Not enough attached deposit"
         );
         require!(
@@ -49,7 +42,7 @@ impl Contract {
     pub fn nft_mint_multi(&mut self, amount: u128) -> Vec<Token> {
         let mut result: Vec<Token> = Vec::new();
         require!(
-            env::attached_deposit() >= MINT_COST * amount, //6.66 NEAR 6660000000000000000000000
+            env::attached_deposit() >= self.mint_price * amount, //6.66 NEAR 6660000000000000000000000
             "Not enough attached deposit"
         );
         for _ in 0..amount {
@@ -61,7 +54,7 @@ impl Contract {
     #[payable]
     pub fn nft_mint(&mut self) -> Token {
         require!(
-            env::attached_deposit() >= MINT_COST, //6.66 NEAR 6660000000000000000000000
+            env::attached_deposit() >= self.mint_price, //6.66 NEAR 6660000000000000000000000
             "Not enough attached deposit"
         );
         require!(self.sales_active, "Public sales is not active");
