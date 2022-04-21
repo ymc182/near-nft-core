@@ -1,6 +1,6 @@
 use super::*;
 use near_contract_standards::non_fungible_token::events;
-use near_sdk::require;
+use near_sdk::{require, ONE_NEAR};
 
 #[near_bindgen]
 impl Contract {
@@ -16,7 +16,7 @@ impl Contract {
     #[payable]
     pub fn whitelist_nft_mint(&mut self) -> Token {
         require!(
-            env::attached_deposit() >= self.wl_price, //6.66 NEAR 6660000000000000000000000
+            env::attached_deposit() >= self.wl_price * ONE_NEAR, //6.66 NEAR 6660000000000000000000000
             "Not enough attached deposit"
         );
         require!(
@@ -42,7 +42,7 @@ impl Contract {
     pub fn nft_mint_multi(&mut self, amount: u128) -> Vec<Token> {
         let mut result: Vec<Token> = Vec::new();
         require!(
-            env::attached_deposit() >= self.mint_price * amount, //6.66 NEAR 6660000000000000000000000
+            env::attached_deposit() >= (self.mint_price * ONE_NEAR) * amount, //6.66 NEAR 6660000000000000000000000
             "Not enough attached deposit"
         );
         for _ in 0..amount {
@@ -54,7 +54,7 @@ impl Contract {
     #[payable]
     pub fn nft_mint(&mut self) -> Token {
         require!(
-            env::attached_deposit() >= self.mint_price, //6.66 NEAR 6660000000000000000000000
+            env::attached_deposit() >= self.mint_price * ONE_NEAR, //6.66 NEAR 6660000000000000000000000
             "Not enough attached deposit"
         );
         require!(self.sales_active, "Public sales is not active");
@@ -75,8 +75,8 @@ impl Contract {
         /* let token_id = (supply.0 + 1).to_string(); */
         let token_metadata: TokenMetadata = TokenMetadata {
             copies: None,
-            title: Some(format!("Nephilim#{}", token_id)),
-            media: Some(format!("{}.gif", token_id)),
+            title: Some(format!("Smashrooms#{}", token_id)),
+            media: Some(format!("{}.png", token_id)),
             description: Some(NFT_TOKEN_DESCRIPTION.to_string()),
             expires_at: None,
             extra: None,

@@ -1,0 +1,1 @@
+near call dev-1650492606908-92079268171950 new_default_meta '{"owner_id":"ewtd.testnet"}' --accountId ewtd.testnet

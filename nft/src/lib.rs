@@ -105,8 +105,8 @@ impl Contract {
             pre_sale_active: false,
             whitelist: UnorderedMap::new(StorageKey::Whitelist.try_to_vec().unwrap()),
             royalties: LazyOption::new(StorageKey::Royalties, Some(&royalties)),
-            mint_price: 0,
-            wl_price: 0,
+            mint_price: 5,
+            wl_price: 7,
             free_mint_list: UnorderedMap::new(StorageKey::FreeMintList.try_to_vec().unwrap()),
             available_nft: Raffle::new(
                 StorageKey::AvailableNft.try_to_vec().unwrap(),
@@ -193,6 +193,23 @@ impl Contract {
     }
     pub fn get_sale_status(&self) -> bool {
         return self.sales_active;
+    }
+    pub fn get_presale_status(&self) -> bool {
+        return self.pre_sale_active;
+    }
+    pub fn set_mint_price(&mut self, price: Balance) {
+        self.assert_owner(env::signer_account_id());
+        self.mint_price = price;
+    }
+    pub fn set_wl_mint_price(&mut self, price: Balance) {
+        self.assert_owner(env::signer_account_id());
+        self.wl_price = price;
+    }
+    pub fn get_mint_pirce(&self) -> Balance {
+        return self.mint_price;
+    }
+    pub fn get_wl_mint_price(&self) -> Balance {
+        return self.wl_price;
     }
     pub fn update_drop_supply(&mut self, add_supply: u128) {
         self.assert_owner(env::signer_account_id());

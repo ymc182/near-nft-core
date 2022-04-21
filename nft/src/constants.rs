@@ -3,10 +3,10 @@ pub const NFT_NAME: &str = "Smashrooms";
 pub const NFT_SYMBOL: &str = "SMA";
 
 pub const NFT_BASE_URI: &str =
-    "https://ewtd.mypinata.cloud/ipfs/Qmdpcsm1Tu5UXnN9RQUiRvSaHuHHPZVBpBL4QcMyuMFRCr";
+    "https://ewtd.mypinata.cloud/ipfs/QmedDxMWhLeiv35Xe7NZZiWh1W4HD7jfVDg9ToUPvCf2sC";
 //6660000000000000000000000
 
-pub const MAX_SUPPLY: u128 = 3000;
+pub const MAX_SUPPLY: u128 = 166;
 
 pub const OFFSET: u128 = 0;
 
