@@ -39,8 +39,43 @@ impl Contract {
         }
     }
     #[payable]
+    pub fn whitelist_nft_mint_multi(&mut self, amount: u128) -> Vec<Token> {
+        require!(
+            env::attached_deposit() >= self.wl_price * ONE_NEAR * amount, //6.66 NEAR 6660000000000000000000000
+            "Not enough attached deposit"
+        );
+        require!(
+            self.pre_sale_active || self.sales_active,
+            "Pre-sale is not active"
+        );
+        let mut result: Vec<Token> = Vec::new();
+
+        let whitelist_amount = self
+            .whitelist
+            .get(&env::predecessor_account_id())
+            .expect("Account Id is not whitelisted");
+
+        require!(
+            whitelist_amount as u128 >= amount,
+            "Not enough amount in whitelist"
+        );
+        for _ in 0..amount {
+            result.push(self.internal_nft_mint(env::predecessor_account_id()));
+        }
+
+        let new_amount = whitelist_amount - amount as u32;
+        if new_amount == 0 {
+            self.whitelist.remove(&env::predecessor_account_id());
+        } else {
+            self.whitelist
+                .insert(&env::predecessor_account_id(), &new_amount);
+        }
+        result
+    }
+    #[payable]
     pub fn nft_mint_multi(&mut self, amount: u128) -> Vec<Token> {
         let mut result: Vec<Token> = Vec::new();
+        require!(self.sales_active, "Public sales is not active");
         require!(
             env::attached_deposit() >= (self.mint_price * ONE_NEAR) * amount, //6.66 NEAR 6660000000000000000000000
             "Not enough attached deposit"
