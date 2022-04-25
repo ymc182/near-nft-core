@@ -112,7 +112,7 @@ impl Contract {
             copies: None,
             title: Some(format!("Smashrooms#{}", token_id)),
             media: Some(format!("{}.png", token_id)),
-            description: Some(NFT_TOKEN_DESCRIPTION.to_string()),
+            description: Some(self.description.clone()),
             expires_at: None,
             extra: None,
             issued_at: Some(env::block_timestamp().to_string()),

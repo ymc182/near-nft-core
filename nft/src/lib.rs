@@ -44,6 +44,8 @@ pub struct Contract {
     //Sales Control
     sales_active: bool,
     pre_sale_active: bool,
+
+    description: String,
 }
 #[derive(BorshSerialize, BorshStorageKey)]
 enum StorageKey {
@@ -64,23 +66,44 @@ impl Contract {
     /// Initializes the contract owned by `owner_id` with
     /// default metadata (for example purposes only).
     #[init]
-    pub fn new_default_meta(owner_id: AccountId) -> Self {
+    pub fn new_init(
+        owner_id: AccountId,
+        mint_price: Balance,
+        wl_price: Option<Balance>,
+        max_supply: u128,
+        nft_name: String,
+        nft_symbol: String,
+        icon: String,
+        base_uri: String,
+        description: String,
+    ) -> Self {
         Self::new(
             owner_id,
             NFTContractMetadata {
                 spec: NFT_METADATA_SPEC.to_string(),
-                name: NFT_NAME.to_string(),
-                symbol: NFT_SYMBOL.to_string(),
-                icon: Some(DATA_IMAGE_SVG_NEAR_ICON.to_string()),
-                base_uri: Some(NFT_BASE_URI.to_string()),
+                name: nft_name,
+                symbol: nft_symbol,
+                icon: Some(icon),
+                base_uri: Some(base_uri),
                 reference: None,
                 reference_hash: None,
             },
+            mint_price,
+            wl_price,
+            max_supply,
+            description,
         )
     }
 
     #[init]
-    pub fn new(owner_id: AccountId, metadata: NFTContractMetadata) -> Self {
+    pub fn new(
+        owner_id: AccountId,
+        metadata: NFTContractMetadata,
+        mint_price: Balance,
+        wl_price: Option<Balance>,
+        max_supply: u128,
+        description: String,
+    ) -> Self {
         assert!(!env::state_exists(), "Already initialized");
 
         metadata.assert_valid();
@@ -100,18 +123,19 @@ impl Contract {
             ),
             metadata: LazyOption::new(StorageKey::Metadata, Some(&metadata)),
             //custom
-            max_supply: MAX_SUPPLY,
+            max_supply: max_supply,
             sales_active: false,
             pre_sale_active: false,
             whitelist: UnorderedMap::new(StorageKey::Whitelist.try_to_vec().unwrap()),
             royalties: LazyOption::new(StorageKey::Royalties, Some(&royalties)),
-            mint_price: 5,
-            wl_price: 7,
+            mint_price,
+            wl_price: wl_price.unwrap_or(mint_price),
             free_mint_list: UnorderedMap::new(StorageKey::FreeMintList.try_to_vec().unwrap()),
             available_nft: Raffle::new(
                 StorageKey::AvailableNft.try_to_vec().unwrap(),
-                MAX_SUPPLY.try_into().unwrap(),
+                max_supply.try_into().unwrap(),
             ),
+            description,
         };
 
         this
@@ -136,7 +160,7 @@ impl Contract {
         let this = Contract {
             tokens: prev.tokens,
             metadata: LazyOption::new(StorageKey::Metadata, Some(&metadata)),
-            max_supply: MAX_SUPPLY,
+            max_supply: prev.max_supply,
             whitelist: prev.whitelist,
             royalties: LazyOption::new(StorageKey::Royalties, Some(&royalties)),
             mint_price: prev.mint_price,
@@ -146,8 +170,9 @@ impl Contract {
             free_mint_list: prev.free_mint_list,
             available_nft: Raffle::new(
                 StorageKey::AvailableNft.try_to_vec().unwrap(),
-                MAX_SUPPLY.try_into().unwrap(),
+                prev.max_supply.try_into().unwrap(),
             ),
+            description: prev.description,
         };
 
         this
@@ -155,19 +180,11 @@ impl Contract {
 
     pub fn update_uri(&mut self, uri: String) {
         self.assert_owner(env::signer_account_id());
-        let new_metadata = NFTContractMetadata {
-            spec: NFT_METADATA_SPEC.to_string(),
-            name: NFT_NAME.to_string(),
-            symbol: NFT_SYMBOL.to_string(),
-            icon: Some(DATA_IMAGE_SVG_NEAR_ICON.to_string()),
-            base_uri: Some(uri),
-            reference: None,
-            reference_hash: None,
-        };
-        self.metadata = LazyOption::new(
-            StorageKey::Metadata.try_to_vec().unwrap(),
-            Some(&new_metadata),
-        )
+        let prev: Contract = env::state_read().expect("ERR_NOT_INITIALIZED");
+        let mut metadata = prev.metadata.get().unwrap();
+        metadata.base_uri = Some(uri);
+
+        self.metadata = LazyOption::new(StorageKey::Metadata.try_to_vec().unwrap(), Some(&metadata))
     }
     pub fn assert_owner(&self, account_id: AccountId) {
         require!(

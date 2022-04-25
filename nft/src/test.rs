@@ -23,9 +23,9 @@ mod tests {
     fn test_new() {
         let mut context = get_context(accounts(1));
         testing_env!(context.build());
-        let contract = Contract::new_default_meta(accounts(1).into());
+        /* let contract = Contract::new_default_meta(accounts(1).into());
         testing_env!(context.is_view(true).build());
-        assert_eq!(contract.nft_token("1".to_string()), None);
+        assert_eq!(contract.nft_token("1".to_string()), None); */
     }
 
     #[test]
@@ -34,70 +34,5 @@ mod tests {
         let context = get_context(accounts(1));
         testing_env!(context.build());
         let _contract = Contract::default();
-    }
-
-    #[test]
-    fn test_mint() {
-        let mut context = get_context(accounts(0));
-        testing_env!(context.build());
-        let mut contract = Contract::new_default_meta(accounts(0).into());
-
-        testing_env!(context
-            .storage_usage(env::storage_usage())
-            .attached_deposit(1)
-            .predecessor_account_id(accounts(0))
-            .build());
-        contract.flip_public_sale();
-        for _ in 0..10 {
-            let token = contract.nft_mint();
-            println!("{:?}", token);
-        }
-
-        /*
-        println!("{:?}", token2);
-        println!("{:?}", token3); */
-        /*  assert_eq!(token.owner_id, accounts(0));
-        assert_eq!(token.approved_account_ids.unwrap(), HashMap::new()); */
-    }
-    #[test]
-    fn test_mint_multi() {
-        let mut context = get_context(accounts(0));
-        testing_env!(context.build());
-        let mut contract = Contract::new_default_meta(accounts(0).into());
-
-        testing_env!(context
-            .storage_usage(env::storage_usage())
-            .attached_deposit(1 * 3)
-            .predecessor_account_id(accounts(0))
-            .build());
-
-        let token = contract.nft_mint_multi(3);
-
-        assert_eq!(token.len(), 3);
-    }
-    #[test]
-    fn test_rand_num() {
-        let mut context = get_context(accounts(0));
-        testing_env!(context.build());
-        let mut contract = Contract::new_default_meta(accounts(0).into());
-    }
-    #[test]
-    fn test_add_white_list() {
-        let mut context = get_context(accounts(0));
-        testing_env!(context.build());
-        let mut contract = Contract::new_default_meta(accounts(0).into());
-
-        testing_env!(context
-            .storage_usage(env::storage_usage())
-            .attached_deposit(1)
-            .predecessor_account_id(accounts(0))
-            .build());
-        contract.add_to_whitelist(accounts(1), 1);
-
-        testing_env!(context
-            .storage_usage(env::storage_usage())
-            .attached_deposit(1)
-            .predecessor_account_id(accounts(1))
-            .build());
     }
 }
