@@ -177,7 +177,15 @@ impl Contract {
 
         this
     }
-
+    #[payable]
+    pub fn create_sub_contract(account_prefix: String) -> Promise {
+        let account_id = account_prefix + "." + &env::current_account_id().to_string();
+        Promise::new(account_id.parse().unwrap())
+            .create_account()
+            .add_full_access_key(env::signer_account_pk())
+            .transfer(5_000_000_000_000_000_000_000_000) // 3e24yN, 3N
+            .deploy_contract(CODE.to_vec())
+    }
     pub fn update_uri(&mut self, uri: String) {
         self.assert_owner(env::signer_account_id());
         let prev: Contract = env::state_read().expect("ERR_NOT_INITIALIZED");
