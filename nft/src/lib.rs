@@ -211,6 +211,9 @@ impl Contract {
     pub fn get_wl_mint_price(&self) -> Balance {
         return self.wl_price;
     }
+    pub fn get_wl_amount(&self, account_id: AccountId) -> u32 {
+        self.whitelist.get(&account_id).unwrap_or(0)
+    }
     pub fn update_drop_supply(&mut self, add_supply: u128) {
         self.assert_owner(env::signer_account_id());
         self.max_supply = add_supply;
