@@ -46,6 +46,7 @@ pub struct Contract {
     pre_sale_active: bool,
 
     description: String,
+    file_extension: String,
 }
 #[derive(BorshSerialize, BorshStorageKey)]
 enum StorageKey {
@@ -76,6 +77,7 @@ impl Contract {
         icon: String,
         base_uri: String,
         description: String,
+        file_extension: String,
     ) -> Self {
         Self::new(
             owner_id,
@@ -92,6 +94,7 @@ impl Contract {
             wl_price,
             max_supply,
             description,
+            file_extension,
         )
     }
 
@@ -103,6 +106,7 @@ impl Contract {
         wl_price: Option<Balance>,
         max_supply: u128,
         description: String,
+        file_extension: String,
     ) -> Self {
         assert!(!env::state_exists(), "Already initialized");
 
@@ -128,14 +132,15 @@ impl Contract {
             pre_sale_active: false,
             whitelist: UnorderedMap::new(StorageKey::Whitelist.try_to_vec().unwrap()),
             royalties: LazyOption::new(StorageKey::Royalties, Some(&royalties)),
-            mint_price: mint_price * ONE_NEAR,
-            wl_price: wl_price.unwrap_or(mint_price * ONE_NEAR),
+            mint_price: mint_price,
+            wl_price: wl_price.unwrap_or(mint_price),
             free_mint_list: UnorderedMap::new(StorageKey::FreeMintList.try_to_vec().unwrap()),
             available_nft: Raffle::new(
                 StorageKey::AvailableNft.try_to_vec().unwrap(),
                 max_supply.try_into().unwrap(),
             ),
             description,
+            file_extension,
         };
 
         this
@@ -173,6 +178,7 @@ impl Contract {
                 prev.max_supply.try_into().unwrap(),
             ),
             description: prev.description,
+            file_extension: prev.file_extension,
         };
 
         this

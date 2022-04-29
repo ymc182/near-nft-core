@@ -111,7 +111,7 @@ impl Contract {
         let token_metadata: TokenMetadata = TokenMetadata {
             copies: None,
             title: Some(format!("Smashrooms#{}", token_id)),
-            media: Some(format!("{}.png", token_id)),
+            media: Some(format!("{}.{}", token_id, self.file_extension)),
             description: Some(self.description.clone()),
             expires_at: None,
             extra: None,
