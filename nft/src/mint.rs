@@ -110,7 +110,7 @@ impl Contract {
         /* let token_id = (supply.0 + 1).to_string(); */
         let token_metadata: TokenMetadata = TokenMetadata {
             copies: None,
-            title: Some(format!("Smashrooms#{}", token_id)),
+            title: Some(format!("{}#{}", self.nft_metadata().name, token_id)),
             media: Some(format!("{}.{}", token_id, self.file_extension)),
             description: Some(self.description.clone()),
             expires_at: None,
