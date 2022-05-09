@@ -48,6 +48,12 @@ impl Contract {
             self.pre_sale_active || self.sales_active,
             "Pre-sale is not active"
         );
+        //check max supply
+        let supply: U128 = self.tokens.nft_total_supply();
+        require!(
+            supply.0 + amount <= self.max_supply,
+            "NFT total supply has reached maximum"
+        );
         let mut result: Vec<Token> = Vec::new();
 
         let whitelist_amount = self
@@ -75,15 +81,38 @@ impl Contract {
     #[payable]
     pub fn nft_mint_multi(&mut self, amount: u128) -> Vec<Token> {
         let mut result: Vec<Token> = Vec::new();
+
+        //check public sales active
         require!(self.sales_active, "Public sales is not active");
+
+        //Check public mint limit
+        let mint_limit = self
+            .public_mint_limit
+            .get(&env::signer_account_id())
+            .unwrap_or(0);
+        require!(mint_limit + amount as u32 <= 4, "Mint limit exceeded");
+
+        //check max supply
+        let supply: U128 = self.tokens.nft_total_supply();
         require!(
-            env::attached_deposit() >= (self.mint_price * ONE_NEAR) * amount, //6.66 NEAR 6660000000000000000000000
+            supply.0 + amount <= self.max_supply,
+            "NFT total supply has reached maximum"
+        );
+        require!(
+            env::attached_deposit() >= (self.mint_price * ONE_NEAR) * amount, //mint price
             "Not enough attached deposit"
         );
+
         for _ in 0..amount {
             let token = self.internal_nft_mint(env::predecessor_account_id());
             result.push(token);
         }
+
+        let new_mint_limit = mint_limit + amount as u32;
+
+        self.public_mint_limit
+            .insert(&env::signer_account_id(), &new_mint_limit);
+
         result
     }
     #[payable]

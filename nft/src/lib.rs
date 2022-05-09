@@ -44,6 +44,8 @@ pub struct Contract {
     //Sales Control
     sales_active: bool,
     pre_sale_active: bool,
+
+    public_mint_limit: UnorderedMap<AccountId, u32>,
 }
 #[derive(BorshSerialize, BorshStorageKey)]
 enum StorageKey {
@@ -57,6 +59,7 @@ enum StorageKey {
     Whitelist,
     FreeMintList,
     AvailableNft,
+    MintLimit,
 }
 
 #[near_bindgen]
@@ -108,6 +111,7 @@ impl Contract {
             mint_price: 5,
             wl_price: 7,
             free_mint_list: UnorderedMap::new(StorageKey::FreeMintList.try_to_vec().unwrap()),
+            public_mint_limit: UnorderedMap::new(StorageKey::MintLimit.try_to_vec().unwrap()),
             available_nft: Raffle::new(
                 StorageKey::AvailableNft.try_to_vec().unwrap(),
                 MAX_SUPPLY.try_into().unwrap(),
@@ -144,6 +148,7 @@ impl Contract {
             sales_active: prev.sales_active,
             pre_sale_active: prev.pre_sale_active,
             free_mint_list: prev.free_mint_list,
+            public_mint_limit: prev.public_mint_limit,
             available_nft: Raffle::new(
                 StorageKey::AvailableNft.try_to_vec().unwrap(),
                 MAX_SUPPLY.try_into().unwrap(),
