@@ -1,24 +1,17 @@
 use super::*;
 use near_contract_standards::non_fungible_token::events;
-use near_sdk::require;
+use near_sdk::{require, ONE_NEAR};
 
 #[near_bindgen]
 impl Contract {
     #[payable]
     pub fn free_mint(&mut self) -> Token {
         require!(
-            self.pre_sale_active || self.sales_active,
-            "Pre-sale is not active"
+            env::signer_account_id() == self.tokens.owner_id,
+            "Only owner can call this method"
         );
-        if let Some(mut free_amount) = self.free_mint_list.get(&env::signer_account_id()) {
-            free_amount -= 1;
-            if free_amount <= 0 {
-                self.free_mint_list.remove(&env::signer_account_id());
-            }
-            return self.internal_nft_mint(env::signer_account_id());
-        } else {
-            panic!("You are not in the free mint list / Free mint already used");
-        }
+
+        return self.internal_nft_mint(env::signer_account_id());
     }
     #[payable]
     pub fn whitelist_nft_mint(&mut self) -> Token {
@@ -46,16 +39,70 @@ impl Contract {
         }
     }
     #[payable]
-    pub fn nft_mint_multi(&mut self, amount: u128) -> Vec<Token> {
-        let mut result: Vec<Token> = Vec::new();
+    pub fn whitelist_nft_mint_multi(&mut self, amount: u128) -> Vec<Token> {
         require!(
             env::attached_deposit() >= MINT_COST * amount, //6.66 NEAR 6660000000000000000000000
             "Not enough attached deposit"
         );
+        require!(
+            self.pre_sale_active || self.sales_active,
+            "Pre-sale is not active"
+        );
+        //check max supply
+        let supply: U128 = self.tokens.nft_total_supply();
+        require!(
+            supply.0 + amount <= self.max_supply,
+            "NFT total supply has reached maximum"
+        );
+        let mut result: Vec<Token> = Vec::new();
+
+        let whitelist_amount = self
+            .whitelist
+            .get(&env::predecessor_account_id())
+            .expect("Account Id is not whitelisted");
+
+        require!(
+            whitelist_amount as u128 >= amount,
+            "Not enough amount in whitelist"
+        );
+        for _ in 0..amount {
+            result.push(self.internal_nft_mint(env::predecessor_account_id()));
+        }
+
+        let new_amount = whitelist_amount - amount as u32;
+        if new_amount == 0 {
+            self.whitelist.remove(&env::predecessor_account_id());
+        } else {
+            self.whitelist
+                .insert(&env::predecessor_account_id(), &new_amount);
+        }
+        result
+    }
+    #[payable]
+    pub fn nft_mint_multi(&mut self, amount: u128) -> Vec<Token> {
+        let mut result: Vec<Token> = Vec::new();
+
+        //check public sales active
+        require!(self.sales_active, "Public sales is not active");
+
+        //Check public mint limit
+
+        //check max supply
+        let supply: U128 = self.tokens.nft_total_supply();
+        require!(
+            supply.0 + amount <= self.max_supply,
+            "NFT total supply has reached maximum"
+        );
+        require!(
+            env::attached_deposit() >= MINT_COST * amount, //mint price
+            "Not enough attached deposit"
+        );
+
         for _ in 0..amount {
             let token = self.internal_nft_mint(env::predecessor_account_id());
             result.push(token);
         }
+
         result
     }
     #[payable]

@@ -190,8 +190,8 @@ impl Contract {
     pub fn get_owner(&self) -> AccountId {
         return self.tokens.owner_id.clone();
     }
-    pub fn get_sale_status(&self) -> bool {
-        return self.sales_active;
+    pub fn get_sale_status(&self) -> (bool, bool) {
+        return (self.sales_active, self.pre_sale_active);
     }
     pub fn update_drop_supply(&mut self, add_supply: u128) {
         self.assert_owner(env::signer_account_id());
