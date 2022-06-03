@@ -4,8 +4,9 @@ use near_contract_standards::non_fungible_token::metadata::{
 use near_contract_standards::non_fungible_token::NonFungibleToken;
 use near_contract_standards::non_fungible_token::{Token, TokenId};
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
-use near_sdk::collections::{LazyOption, UnorderedMap, Vector};
+/* use near_sdk::collections::{LazyOption, UnorderedMap /* Vector */}; */
 use near_sdk::json_types::U128;
+use near_sdk::store::{LazyOption, LookupMap, UnorderedMap};
 use near_sdk::{
     env, near_bindgen, require, AccountId, BorshStorageKey, PanicOnDefault, Promise, PromiseOrValue,
 };
@@ -36,8 +37,7 @@ pub struct Contract {
     max_supply: u128,
     whitelist: UnorderedMap<AccountId, u32>,
     free_mint_list: UnorderedMap<AccountId, u32>,
-    apply_whitelist: UnorderedMap<AccountId, bool>,
-
+    /*     apply_whitelist: near_sdk::collections::UnorderedMap<AccountId, bool>, */
     available_nft: Raffle,
     //Sales Control
     sales_active: bool,
@@ -54,7 +54,7 @@ enum StorageKey {
     //Custom
     Whitelist,
     FreeMintList,
-    WhitelistApplication,
+    /*     WhitelistApplication, */
     AvailableNft,
 }
 
@@ -97,16 +97,16 @@ impl Contract {
                 Some(StorageKey::Enumeration),
                 Some(StorageKey::Approval),
             ),
-            metadata: LazyOption::new(StorageKey::Metadata, Some(&metadata)),
+            metadata: LazyOption::new(StorageKey::Metadata, Some(metadata)),
             //custom
             max_supply: MAX_SUPPLY,
             sales_active: false,
             pre_sale_active: false,
             whitelist: UnorderedMap::new(StorageKey::Whitelist.try_to_vec().unwrap()),
-            royalties: LazyOption::new(StorageKey::Royalties, Some(&royalties)),
-            apply_whitelist: UnorderedMap::new(
+            royalties: LazyOption::new(StorageKey::Royalties, Some(royalties)),
+            /*     apply_whitelist: UnorderedMap::new(
                 StorageKey::WhitelistApplication.try_to_vec().unwrap(),
-            ),
+            ), */
             free_mint_list: UnorderedMap::new(StorageKey::FreeMintList.try_to_vec().unwrap()),
             available_nft: Raffle::new(
                 StorageKey::AvailableNft.try_to_vec().unwrap(),
@@ -131,15 +131,15 @@ impl Contract {
             percent: 5,
         };
 
-        let metadata = prev.metadata.get().unwrap();
+        let metadata = prev.metadata.get().as_ref().unwrap();
         // let prev_base_uri = prev.metadata.get().unwrap().base_uri.unwrap();
         let this = Contract {
             tokens: prev.tokens,
-            metadata: LazyOption::new(StorageKey::Metadata, Some(&metadata)),
+            metadata: LazyOption::new(StorageKey::Metadata, Some(metadata.clone())),
             max_supply: MAX_SUPPLY,
             whitelist: prev.whitelist,
-            royalties: LazyOption::new(StorageKey::Royalties, Some(&royalties)),
-            apply_whitelist: prev.apply_whitelist,
+            royalties: LazyOption::new(StorageKey::Royalties, Some(royalties)),
+            /*   apply_whitelist: prev.apply_whitelist, */
             sales_active: prev.sales_active,
             pre_sale_active: prev.pre_sale_active,
             free_mint_list: prev.free_mint_list,
@@ -165,7 +165,7 @@ impl Contract {
         };
         self.metadata = LazyOption::new(
             StorageKey::Metadata.try_to_vec().unwrap(),
-            Some(&new_metadata),
+            Some(new_metadata),
         )
     }
     pub fn assert_owner(&self, account_id: AccountId) {
@@ -210,6 +210,6 @@ near_contract_standards::impl_non_fungible_token_enumeration!(Contract, tokens);
 #[near_bindgen]
 impl NonFungibleTokenMetadataProvider for Contract {
     fn nft_metadata(&self) -> NFTContractMetadata {
-        self.metadata.get().unwrap()
+        self.metadata.get().as_ref().unwrap().clone()
     }
 }

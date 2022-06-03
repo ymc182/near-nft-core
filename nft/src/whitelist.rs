@@ -6,15 +6,35 @@ use super::*;
 impl Contract {
     pub fn add_to_whitelist(&mut self, account_id: AccountId, amount: u32) {
         self.assert_owner(env::predecessor_account_id());
-        if let Some(_is_true) = self.apply_whitelist.get(&account_id) {
-            self.apply_whitelist.remove(&account_id);
+        self.whitelist.insert(account_id, amount);
+    }
+    pub fn add_to_whitelist_many(&mut self, account_ids: Vec<AccountId>, amount: u32) {
+        self.assert_owner(env::predecessor_account_id());
+        for account_id in account_ids {
+            self.whitelist.insert(account_id, amount);
         }
-        self.whitelist.insert(&account_id, &amount);
     }
-    pub fn is_whitelisted(&self, account_id: AccountId) -> bool {
-        self.whitelist.keys().any(|x| x == account_id)
+    pub fn add_to_free_mint(&mut self, account_id: AccountId, amount: u32) {
+        self.assert_owner(env::predecessor_account_id());
+        self.free_mint_list.insert(account_id, amount);
     }
-    pub fn apply_for_whitelist(&mut self) {
+    pub fn add_to_free_mint_many(&mut self, account_ids: Vec<AccountId>, amount: u32) {
+        self.assert_owner(env::predecessor_account_id());
+        for account_id in account_ids {
+            self.free_mint_list.insert(account_id, amount);
+        }
+    }
+    pub fn is_whitelisted(&self, account_id: AccountId) -> u32 {
+        self.whitelist.get(&account_id).unwrap_or(&0).clone()
+    }
+    pub fn is_free_mint(&self, account_id: AccountId) -> bool {
+        self.free_mint_list
+            .keys()
+            .any(|x| x.to_string() == account_id.to_string())
+    }
+
+    //TODO: Create plugin for following functions
+    /*  pub fn apply_for_whitelist(&mut self) {
         let applicant = self.apply_whitelist.get(&env::predecessor_account_id());
         if let Some(_) = applicant {
             panic!("Account is already applied for whitelist");
@@ -74,5 +94,5 @@ impl Contract {
             .as_str(),
         );
         result
-    }
+    } */
 }

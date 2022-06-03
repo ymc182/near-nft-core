@@ -1,17 +1,29 @@
 use super::*;
 use near_contract_standards::non_fungible_token::events;
-use near_sdk::{require, ONE_NEAR};
+use near_sdk::require;
 
 #[near_bindgen]
 impl Contract {
     #[payable]
     pub fn free_mint(&mut self) -> Token {
         require!(
-            env::signer_account_id() == self.tokens.owner_id,
-            "Only owner can call this method"
+            self.pre_sale_active || self.sales_active,
+            "Pre-sale is not active"
         );
+        let whitelist_amount = self.free_mint_list.get(&env::predecessor_account_id());
+        if let Some(amount) = whitelist_amount {
+            let new_amount = amount - 1;
+            if new_amount == 0 {
+                self.whitelist.remove(&env::predecessor_account_id());
+            } else {
+                self.whitelist
+                    .insert(env::predecessor_account_id(), new_amount);
+            }
 
-        return self.internal_nft_mint(env::signer_account_id());
+            return self.internal_nft_mint(env::predecessor_account_id());
+        } else {
+            panic!("Account Id is not whitelisted");
+        }
     }
     #[payable]
     pub fn whitelist_nft_mint(&mut self) -> Token {
@@ -30,7 +42,7 @@ impl Contract {
                 self.whitelist.remove(&env::predecessor_account_id());
             } else {
                 self.whitelist
-                    .insert(&env::predecessor_account_id(), &new_amount);
+                    .insert(env::predecessor_account_id(), new_amount);
             }
 
             return self.internal_nft_mint(env::predecessor_account_id());
@@ -39,34 +51,34 @@ impl Contract {
         }
     }
     #[payable]
-    pub fn whitelist_nft_mint_multi(&mut self, amount: u128) -> Vec<Token> {
+    pub fn whitelist_nft_mint_many(&mut self, amount: u128) -> Vec<Token> {
         require!(
-            env::attached_deposit() >= MINT_COST * amount, //6.66 NEAR 6660000000000000000000000
+            env::attached_deposit() >= MINT_COST * amount,
             "Not enough attached deposit"
         );
         require!(
             self.pre_sale_active || self.sales_active,
             "Pre-sale is not active"
         );
-        //check max supply
         let supply: U128 = self.tokens.nft_total_supply();
         require!(
             supply.0 + amount <= self.max_supply,
             "NFT total supply has reached maximum"
         );
-        let mut result: Vec<Token> = Vec::new();
-
         let whitelist_amount = self
             .whitelist
             .get(&env::predecessor_account_id())
-            .expect("Account Id is not whitelisted");
-
+            .expect("Account Id is not whitelisted")
+            .clone();
+        //check max supply
         require!(
-            whitelist_amount as u128 >= amount,
+            whitelist_amount.clone() as u128 >= amount,
             "Not enough amount in whitelist"
         );
+        let mut result: Vec<Token> = Vec::new();
         for _ in 0..amount {
-            result.push(self.internal_nft_mint(env::predecessor_account_id()));
+            let token = self.internal_nft_mint(env::predecessor_account_id());
+            result.push(token);
         }
 
         let new_amount = whitelist_amount - amount as u32;
@@ -74,12 +86,12 @@ impl Contract {
             self.whitelist.remove(&env::predecessor_account_id());
         } else {
             self.whitelist
-                .insert(&env::predecessor_account_id(), &new_amount);
+                .insert(env::predecessor_account_id(), new_amount);
         }
         result
     }
     #[payable]
-    pub fn nft_mint_multi(&mut self, amount: u128) -> Vec<Token> {
+    pub fn nft_mint_many(&mut self, amount: u128) -> Vec<Token> {
         let mut result: Vec<Token> = Vec::new();
 
         //check public sales active

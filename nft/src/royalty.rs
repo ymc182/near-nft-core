@@ -95,6 +95,7 @@ impl Payouts for Contract {
             .expect("No such token_id");
         self.royalties
             .get()
+            .as_ref()
             .map_or(Payout::default(), |r| r.create_payout(balance.0, &owner_id))
     }
     #[payable]

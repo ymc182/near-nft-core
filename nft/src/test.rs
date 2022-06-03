@@ -71,7 +71,7 @@ mod tests {
             .predecessor_account_id(accounts(0))
             .build());
 
-        let token = contract.nft_mint_multi(3);
+        let token = contract.nft_mint_many(3);
 
         assert_eq!(token.len(), 3);
     }
@@ -93,22 +93,17 @@ mod tests {
             .predecessor_account_id(accounts(0))
             .build());
         contract.add_to_whitelist(accounts(1), 1);
-        contract.apply_for_whitelist();
+
         testing_env!(context
             .storage_usage(env::storage_usage())
             .attached_deposit(1)
             .predecessor_account_id(accounts(2))
             .build());
-        contract.apply_for_whitelist();
 
         testing_env!(context
             .storage_usage(env::storage_usage())
             .attached_deposit(1)
             .predecessor_account_id(accounts(1))
             .build());
-        contract.apply_for_whitelist();
-        assert!(contract.is_whitelisted(accounts(1)));
-        let a = contract.raffle_whitelist();
-        println!("Rand num:{}", a)
     }
 }
