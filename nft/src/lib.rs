@@ -183,15 +183,7 @@ impl Contract {
 
         this
     }
-    /* #[payable]
-    pub fn create_sub_contract(account_prefix: String) -> Promise {
-        let account_id = account_prefix + "." + &env::current_account_id().to_string();
-        Promise::new(account_id.parse().unwrap())
-            .create_account()
-            .add_full_access_key(env::signer_account_pk())
-            .transfer(5_000_000_000_000_000_000_000_000) // 3e24yN, 3N
-            .deploy_contract(CODE.to_vec())
-    } */
+
     pub fn update_uri(&mut self, uri: String) {
         self.assert_owner(env::signer_account_id());
         let prev: Contract = env::state_read().expect("ERR_NOT_INITIALIZED");
@@ -206,7 +198,11 @@ impl Contract {
             "Only owner can call this method"
         );
     }
-
+    pub fn update_nft_name(&mut self, name: String) {
+        let mut metadata = self.metadata.get().unwrap();
+        metadata.name = name;
+        self.metadata = LazyOption::new(StorageKey::Metadata.try_to_vec().unwrap(), Some(&metadata))
+    }
     pub fn flip_public_sale(&mut self) {
         self.assert_owner(env::signer_account_id());
         self.sales_active = !self.sales_active;
