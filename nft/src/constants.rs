@@ -5,7 +5,7 @@ pub const NFT_SYMBOL: &str = "NEPH";
 pub const NFT_BASE_URI: &str =
     "https://ewtd.mypinata.cloud/ipfs/QmbrThqCsndQAqoCrSGogy43Bsbjkmay7nFsALz3W5ZLRv";
 //6660000000000000000000000
-pub const MINT_COST: u128 = 4990000000000000000000000;
+pub const MINT_COST: u128 = 14990000000000000000000000;
 
 pub const MAX_SUPPLY: u128 = 666;
 

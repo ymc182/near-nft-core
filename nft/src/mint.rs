@@ -50,7 +50,7 @@ impl Contract {
             panic!("Account Id is not whitelisted");
         }
     }
-    #[payable]
+    /*  #[payable]
     pub fn whitelist_nft_mint_many(&mut self, amount: u128) -> Vec<Token> {
         require!(
             env::attached_deposit() >= MINT_COST * amount,
@@ -75,12 +75,15 @@ impl Contract {
             whitelist_amount.clone() as u128 >= amount,
             "Not enough amount in whitelist"
         );
-        let mut result: Vec<Token> = Vec::new();
+
+        /*      let mut result: Vec<Token> = Vec::new();
         for _ in 0..amount {
             let token = self.internal_nft_mint(env::predecessor_account_id());
             result.push(token);
-        }
-
+        } */
+        let tokens: Vec<Token> = (0..amount)
+            .map(|_| self.internal_nft_mint(env::predecessor_account_id()))
+            .collect();
         let new_amount = whitelist_amount - amount as u32;
         if new_amount == 0 {
             self.whitelist.remove(&env::predecessor_account_id());
@@ -88,9 +91,9 @@ impl Contract {
             self.whitelist
                 .insert(env::predecessor_account_id(), new_amount);
         }
-        result
-    }
-    #[payable]
+        tokens
+    } */
+    /*   #[payable]
     pub fn nft_mint_many(&mut self, amount: u128) -> Vec<Token> {
         let mut result: Vec<Token> = Vec::new();
 
@@ -110,13 +113,12 @@ impl Contract {
             "Not enough attached deposit"
         );
 
-        for _ in 0..amount {
-            let token = self.internal_nft_mint(env::predecessor_account_id());
-            result.push(token);
-        }
+        let tokens: Vec<Token> = (0..amount)
+            .map(|_| self.internal_nft_mint(env::predecessor_account_id()))
+            .collect();
 
-        result
-    }
+        tokens
+    } */
     #[payable]
     pub fn nft_mint(&mut self) -> Token {
         require!(
