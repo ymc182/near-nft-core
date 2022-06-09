@@ -5,7 +5,11 @@ impl Contract {
     pub fn get_max_supply(&self) -> u128 {
         self.max_supply
     }
+    pub fn get_mint_price() -> u128 {
+        MINT_COST
+    }
 }
+
 pub fn get_random_number(shift_amount: u128) -> u32 {
     let mut seed = env::random_seed();
 
